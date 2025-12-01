@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.env.test
+
+.vercel
+
+/generated/prisma
+/src/generated/prisma
+

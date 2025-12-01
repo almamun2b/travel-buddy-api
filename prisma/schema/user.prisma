@@ -1,0 +1,54 @@
+model User {
+  id                 String     @id @default(uuid())
+  email              String     @unique
+  password           String
+  role               UserRole   @default(USER)
+  status             UserStatus @default(ACTIVE)
+  needPasswordChange Boolean    @default(false)
+
+  // Profile Information (shared by Admin and User)
+  fullName        String
+  profilePhoto    String?
+  contactNumber   String?
+  bio             String?   @db.Text
+  dateOfBirth     DateTime?
+  gender          Gender?
+  currentLocation String?
+
+  // Travel-specific fields (used by USER role)
+  travelInterests  String[] // e.g., hiking, food tours, photography
+  visitedCountries String[] // Array of countries visited
+
+  // Subscription & Verification (used by USER role)
+  isVerified       Boolean @default(false)
+  hasVerifiedBadge Boolean @default(false)
+
+  // Soft delete
+  isDeleted Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  subscription Subscription?
+
+  @@map("users")
+}
+
+model Subscription {
+  id               String             @id @default(uuid())
+  userId           String             @unique
+  plan             SubscriptionPlan
+  status           SubscriptionStatus @default(ACTIVE)
+  startDate        DateTime           @default(now())
+  endDate          DateTime
+  stripeCustomerId String?
+  stripeSubId      String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("subscriptions")
+}
