@@ -231,7 +231,7 @@ const forgotPassword = async (payload: { email: string }) => {
   );
 
   const resetPassLink =
-    env.resetPassLink + `?userId=${userData.id}&token=${resetPassToken}`;
+    env.resetPasswordUrl + `?userId=${userData.id}&token=${resetPassToken}`;
 
   await emailSender(
     userData.email,
@@ -308,7 +308,7 @@ const getMe = async (user: IAuthUser) => {
       email: true,
       role: true,
       fullName: true,
-      profilePhoto: true,
+      avatar: true,
       contactNumber: true,
       bio: true,
       dateOfBirth: true,

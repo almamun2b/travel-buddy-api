@@ -1,4 +1,4 @@
-import { UserRole } from "@prisma/client";
+import { Gender, UserRole } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 import { env } from "../config/env";
 import prisma from "../shared/prisma";
@@ -17,7 +17,7 @@ const seedAdmin = async () => {
     }
 
     const hashedPassword = await bcrypt.hash(
-      "admin123",
+      env.superAdmin.password,
       parseInt(env.bcryptSaltRound)
     );
 
@@ -28,6 +28,9 @@ const seedAdmin = async () => {
         role: UserRole.ADMIN,
         fullName: env.superAdmin.fullName,
         contactNumber: env.superAdmin.contactNumber,
+        isVerified: true,
+        hasVerifiedBadge: true,
+        gender: Gender.MALE,
       },
     });
 

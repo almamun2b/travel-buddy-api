@@ -17,7 +17,7 @@ const userSelectFields = {
   email: true,
   role: true,
   fullName: true,
-  profilePhoto: true,
+  avatar: true,
   contactNumber: true,
   bio: true,
   dateOfBirth: true,
@@ -37,7 +37,7 @@ const userSelectFields = {
 const publicProfileFields = {
   id: true,
   fullName: true,
-  profilePhoto: true,
+  avatar: true,
   bio: true,
   currentLocation: true,
   travelInterests: true,
@@ -52,7 +52,7 @@ const createAdmin = async (req: Request): Promise<Partial<User>> => {
 
   if (file) {
     const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
-    req.body.admin.profilePhoto = uploadToCloudinary?.secure_url;
+    req.body.admin.avatar = uploadToCloudinary?.secure_url;
   }
 
   // Check if email already exists
@@ -78,7 +78,7 @@ const createAdmin = async (req: Request): Promise<Partial<User>> => {
       password: hashedPassword,
       role: UserRole.ADMIN,
       fullName: req.body.admin.name,
-      profilePhoto: req.body.admin.profilePhoto,
+      avatar: req.body.admin.avatar,
       contactNumber: req.body.admin.contactNumber,
     },
     select: userSelectFields,
@@ -269,13 +269,13 @@ const updateMyProfile = async (user: IAuthUser, req: Request) => {
   const file = req.file;
   if (file) {
     const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
-    req.body.profilePhoto = uploadToCloudinary?.secure_url;
+    req.body.avatar = uploadToCloudinary?.secure_url;
   }
 
   // Fields that can be updated by user
   const allowedFields = [
     "fullName",
-    "profilePhoto",
+    "avatar",
     "contactNumber",
     "bio",
     "dateOfBirth",

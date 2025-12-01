@@ -8,7 +8,7 @@ model User {
 
   // Profile Information (shared by Admin and User)
   fullName        String
-  profilePhoto    String?
+  avatar          String?
   contactNumber   String?
   bio             String?   @db.Text
   dateOfBirth     DateTime?

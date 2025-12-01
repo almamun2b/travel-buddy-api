@@ -27,7 +27,7 @@ const initSubscriptionPayment = catchAsync(
 const handleStripeWebhookEvent = catchAsync(
   async (req: Request, res: Response) => {
     const sig = req.headers["stripe-signature"] as string;
-    const webhookSecret = env.stripeWebhookSecret;
+    const webhookSecret = env.stripe.webhookSecret;
 
     let event;
     try {

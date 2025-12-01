@@ -27,10 +27,12 @@ interface Env {
     resetPassSecret: string;
     resetPassTokenExpiresIn: string;
   };
+  stripe: {
+    secretKey: string;
+    webhookSecret: string;
+  };
   openRouterApiKey: string;
-  stripeSecretKey: string;
-  stripeWebhookSecret: string;
-  resetPassLink: string;
+  resetPasswordUrl: string;
   emailSender: {
     email: string;
     appPass: string;
@@ -56,6 +58,8 @@ const env: Env = {
   databaseUrl: getEnvVar("DATABASE_URL"),
   clientUrl: getEnvVar("CLIENT_URL"),
   bcryptSaltRound: getEnvVar("BCRYPT_SALT_ROUND"),
+  openRouterApiKey: getEnvVar("OPEN_ROUTER_API_KEY"),
+  resetPasswordUrl: getEnvVar("RESET_PASSWORD_URL"),
   superAdmin: {
     email: getEnvVar("SUPER_ADMIN_EMAIL"),
     password: getEnvVar("SUPER_ADMIN_PASSWORD"),
@@ -75,10 +79,10 @@ const env: Env = {
     resetPassSecret: getEnvVar("JWT_RESET_PASS_TOKEN_SECRET"),
     resetPassTokenExpiresIn: getEnvVar("JWT_RESET_PASS_TOKEN_EXPIRES_IN"),
   },
-  openRouterApiKey: getEnvVar("OPEN_ROUTER_API_KEY"),
-  stripeSecretKey: getEnvVar("STRIPE_SECRET_KEY"),
-  stripeWebhookSecret: getEnvVar("STRIPE_WEBHOOK_SECRET"),
-  resetPassLink: getEnvVar("RESET_PASS_LINK"),
+  stripe: {
+    secretKey: getEnvVar("STRIPE_SECRET_KEY"),
+    webhookSecret: getEnvVar("STRIPE_WEBHOOK_SECRET"),
+  },
   emailSender: {
     email: getEnvVar("EMAIL_SENDER_EMAIL"),
     appPass: getEnvVar("EMAIL_SENDER_APP_PASS"),
