@@ -52,10 +52,28 @@ const resetPassword = z.object({
   }),
 });
 
+const verifyEmail = z.object({
+  body: z.object({
+    email: z.string().email("Please provide a valid email address"),
+    code: z
+      .string()
+      .length(6, "Verification code must be exactly 6 digits")
+      .regex(/^\d{6}$/, "Verification code must contain only digits"),
+  }),
+});
+
+const resendVerificationCode = z.object({
+  body: z.object({
+    email: z.string().email("Please provide a valid email address"),
+  }),
+});
+
 export const AuthValidation = {
   registerUser,
   loginUser,
   changePassword,
   forgotPassword,
   resetPassword,
+  verifyEmail,
+  resendVerificationCode,
 };

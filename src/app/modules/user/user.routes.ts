@@ -54,7 +54,7 @@ router.patch(
   fileUploader.upload.single("file"),
   (req: Request, res: Response, next: NextFunction) => {
     if (req.body.data) {
-      req.body = JSON.parse(req.body.data);
+      req.body = userValidation.updateProfile.parse(JSON.parse(req.body.data));
     }
     return userController.updateMyProfile(req, res, next);
   }

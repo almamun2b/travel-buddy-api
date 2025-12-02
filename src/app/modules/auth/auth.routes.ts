@@ -17,6 +17,20 @@ router.post(
 );
 
 router.post(
+  "/verify-email",
+  authLimiter,
+  validateRequest(AuthValidation.verifyEmail),
+  AuthController.verifyEmail
+);
+
+router.post(
+  "/resend-verification-code",
+  authLimiter,
+  validateRequest(AuthValidation.resendVerificationCode),
+  AuthController.resendVerificationCode
+);
+
+router.post(
   "/login",
   authLimiter,
   validateRequest(AuthValidation.loginUser),

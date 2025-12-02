@@ -37,7 +37,8 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: "User registered successfully!",
+    message:
+      "User registered successfully! Please check your email for the verification code.",
     data: {
       id: result.id,
       email: result.email,
@@ -46,6 +47,30 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
+
+const verifyEmail = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthServices.verifyEmail(req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Email verified successfully! You can now login.",
+    data: result,
+  });
+});
+
+const resendVerificationCode = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await AuthServices.resendVerificationCode(req.body);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Verification code sent successfully! Please check your email.",
+      data: result,
+    });
+  }
+);
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const accessTokenMaxAge = parseExpiryToMs(env.jwt.accessTokenExpiresIn);
@@ -164,6 +189,8 @@ const logout = catchAsync(async (req: Request, res: Response) => {
 
 export const AuthController = {
   registerUser,
+  verifyEmail,
+  resendVerificationCode,
   loginUser,
   refreshToken,
   changePassword,

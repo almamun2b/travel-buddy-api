@@ -50,14 +50,9 @@ const publicProfileFields = {
 const createAdmin = async (req: Request): Promise<Partial<User>> => {
   const file = req.file;
 
-  if (file) {
-    const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
-    req.body.admin.avatar = uploadToCloudinary?.secure_url;
-  }
-
   // Check if email already exists
   const existingUser = await prisma.user.findUnique({
-    where: { email: req.body.admin.email },
+    where: { email: req.body.email },
   });
 
   if (existingUser) {
@@ -67,6 +62,11 @@ const createAdmin = async (req: Request): Promise<Partial<User>> => {
     );
   }
 
+  if (file) {
+    const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
+    req.body.avatar = uploadToCloudinary?.secure_url;
+  }
+
   const hashedPassword: string = await bcrypt.hash(
     req.body.password,
     parseInt(env.bcryptSaltRound)
@@ -74,12 +74,12 @@ const createAdmin = async (req: Request): Promise<Partial<User>> => {
 
   const result = await prisma.user.create({
     data: {
-      email: req.body.admin.email,
+      email: req.body.email,
       password: hashedPassword,
       role: UserRole.ADMIN,
-      fullName: req.body.admin.name,
-      avatar: req.body.admin.avatar,
-      contactNumber: req.body.admin.contactNumber,
+      fullName: req.body.fullName,
+      avatar: req.body.avatar,
+      contactNumber: req.body.contactNumber,
     },
     select: userSelectFields,
   });

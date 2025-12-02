@@ -20,6 +20,11 @@ interface IRegisterPayload {
   visitedCountries?: string[];
 }
 
+// Generate a random 6-digit verification code
+const generateVerificationCode = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 const registerUser = async (payload: IRegisterPayload) => {
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
@@ -39,29 +44,177 @@ const registerUser = async (payload: IRegisterPayload) => {
     parseInt(env.bcryptSaltRound)
   );
 
-  // Create user with default USER role
+  // Generate verification code
+  const verificationCode = generateVerificationCode();
+  const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  // Create user with isVerified = false and verification code
   const newUser = await prisma.user.create({
     data: {
       email: payload.email,
       password: hashedPassword,
       fullName: payload.fullName,
       role: UserRole.USER,
+      isVerified: false,
       contactNumber: payload.contactNumber,
       bio: payload.bio,
       currentLocation: payload.currentLocation,
       travelInterests: payload.travelInterests || [],
       visitedCountries: payload.visitedCountries || [],
+      verificationCode: {
+        create: {
+          code: verificationCode,
+          expiresAt: codeExpiresAt,
+        },
+      },
     },
     select: {
       id: true,
       email: true,
       fullName: true,
       role: true,
+      isVerified: true,
       createdAt: true,
     },
   });
 
+  // Send verification email
+  await emailSender({
+    email: payload.email,
+    subject: "Verify Your Email Address",
+    html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">Verify Your Email Address</h2>
+      <p>Dear ${payload.fullName},</p>
+      <p>Thank you for registering with Travel Buddy! Please use the verification code below to verify your email address:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px; display: inline-block;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #4CAF50;">
+            ${verificationCode}
+          </span>
+        </div>
+      </div>
+      <p style="color: #666; font-size: 14px;">
+        This code will expire in 10 minutes. If you didn't create an account, please ignore this email.
+      </p>
+      <p>Best regards,<br>Travel Buddy Team</p>
+    </div>
+    `,
+  });
+
   return newUser;
+};
+
+const verifyEmail = async (payload: { email: string; code: string }) => {
+  const userData = await prisma.user.findFirst({
+    where: {
+      email: payload.email,
+      isDeleted: false,
+    },
+    include: {
+      verificationCode: true,
+    },
+  });
+
+  if (!userData) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
+  }
+
+  if (userData.isVerified) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Email is already verified!");
+  }
+
+  if (!userData.verificationCode) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Verification code not found. Please request a new code."
+    );
+  }
+
+  // Check if code is expired
+  if (new Date() > userData.verificationCode.expiresAt) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Verification code has expired. Please request a new code."
+    );
+  }
+
+  // Verify the code
+  if (userData.verificationCode.code !== payload.code) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid verification code!");
+  }
+
+  // Update user as verified and delete the verification code
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userData.id },
+      data: { isVerified: true },
+    }),
+    prisma.verificationCode.delete({
+      where: { id: userData.verificationCode.id },
+    }),
+  ]);
+
+  return { message: "Email verified successfully!" };
+};
+
+const resendVerificationCode = async (payload: { email: string }) => {
+  const userData = await prisma.user.findFirst({
+    where: {
+      email: payload.email,
+      isDeleted: false,
+    },
+  });
+
+  if (!userData) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
+  }
+
+  if (userData.isVerified) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Email is already verified!");
+  }
+
+  // Generate new verification code
+  const verificationCode = generateVerificationCode();
+  const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  // Upsert verification code
+  await prisma.verificationCode.upsert({
+    where: { userId: userData.id },
+    update: {
+      code: verificationCode,
+      expiresAt: codeExpiresAt,
+    },
+    create: {
+      userId: userData.id,
+      code: verificationCode,
+      expiresAt: codeExpiresAt,
+    },
+  });
+
+  // Send verification email
+  await emailSender({
+    email: payload.email,
+    subject: "Your New Verification Code",
+    html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">Your New Verification Code</h2>
+      <p>Dear ${userData.fullName},</p>
+      <p>Here is your new verification code:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px; display: inline-block;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #4CAF50;">
+            ${verificationCode}
+          </span>
+        </div>
+      </div>
+      <p style="color: #666; font-size: 14px;">
+        This code will expire in 10 minutes. If you didn't request this, please ignore this email.
+      </p>
+      <p>Best regards,<br>Travel Buddy Team</p>
+    </div>
+    `,
+  });
+
+  return { message: "Verification code sent successfully!" };
 };
 
 const loginUser = async (payload: { email: string; password: string }) => {
@@ -84,6 +237,14 @@ const loginUser = async (payload: { email: string; password: string }) => {
 
   if (!isCorrectPassword) {
     throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid credentials!");
+  }
+
+  // Check if user's email is verified (only for USER role, not ADMIN)
+  if (userData.role === UserRole.USER && !userData.isVerified) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "Please verify your email before logging in."
+    );
   }
 
   const accessToken = jwtHelpers.generateToken(
@@ -233,10 +394,10 @@ const forgotPassword = async (payload: { email: string }) => {
   const resetPassLink =
     env.resetPasswordUrl + `?userId=${userData.id}&token=${resetPassToken}`;
 
-  await emailSender(
-    userData.email,
-    `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  await emailSender({
+    email: userData.email,
+    subject: "Password Reset Request",
+    html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Password Reset Request</h2>
       <p>Dear ${userData.fullName},</p>
       <p>You have requested to reset your password. Click the button below to proceed:</p>
@@ -252,8 +413,8 @@ const forgotPassword = async (payload: { email: string }) => {
       </p>
       <p>Best regards,<br>Travel Buddy Team</p>
     </div>
-    `
-  );
+    `,
+  });
 };
 
 const resetPassword = async (
@@ -343,6 +504,8 @@ const getMe = async (user: IAuthUser) => {
 
 export const AuthServices = {
   registerUser,
+  verifyEmail,
+  resendVerificationCode,
   loginUser,
   refreshToken,
   changePassword,
