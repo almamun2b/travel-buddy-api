@@ -28,6 +28,7 @@ enum SubscriptionStatus {
 }
 
 enum SubscriptionPlan {
+  FREE
   MONTHLY
   YEARLY
 }
@@ -38,4 +39,17 @@ enum TravelType {
   FRIENDS
   COUPLE
   GROUP
+}
+
+enum TravelPlanStatus {
+  OPEN
+  CLOSED
+  COMPLETED
+  CANCELLED
+}
+
+enum TravelRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

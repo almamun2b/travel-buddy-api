@@ -33,6 +33,10 @@ model User {
   // Relations
   subscription     Subscription?
   verificationCode VerificationCode?
+  travelPlans      TravelPlan[]      @relation("CreatedTravelPlans")
+  travelRequests   TravelRequest[]   @relation("TravelRequests")
+  reviewsGiven     Review[]          @relation("ReviewsGiven")
+  reviewsReceived  Review[]          @relation("ReviewsReceived")
 
   @@map("users")
 }

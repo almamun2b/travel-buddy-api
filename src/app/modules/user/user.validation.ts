@@ -13,9 +13,7 @@ const createAdmin = z.object({
 });
 
 const updateStatus = z.object({
-  body: z.object({
-    status: z.enum([UserStatus.ACTIVE, UserStatus.BLOCKED, UserStatus.DELETED]),
-  }),
+  status: z.enum([UserStatus.ACTIVE, UserStatus.BLOCKED, UserStatus.DELETED]),
 });
 
 const updateProfile = z.object({

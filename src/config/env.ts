@@ -30,6 +30,9 @@ interface Env {
   stripe: {
     secretKey: string;
     webhookSecret: string;
+    // webhookUrl: string;
+    successUrl: string;
+    cancelUrl: string;
   };
   openRouterApiKey: string;
   resetPasswordUrl: string;
@@ -82,6 +85,9 @@ const env: Env = {
   stripe: {
     secretKey: getEnvVar("STRIPE_SECRET_KEY"),
     webhookSecret: getEnvVar("STRIPE_WEBHOOK_SECRET"),
+    // webhookUrl: getEnvVar("STRIPE_WEBHOOK_URL"),
+    successUrl: getEnvVar("STRIPE_PAYMENT_SUCCESS_URL"),
+    cancelUrl: getEnvVar("STRIPE_PAYMENT_CANCEL_URL"),
   },
   emailSender: {
     email: getEnvVar("EMAIL_SENDER_EMAIL"),

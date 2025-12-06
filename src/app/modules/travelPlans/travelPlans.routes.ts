@@ -1,0 +1,138 @@
+import { UserRole } from "@prisma/client";
+import express, { NextFunction, Request, Response } from "express";
+import { fileUploader } from "../../../helpers/fileUploader";
+import auth from "../../middlewares/auth";
+import validateRequest from "../../middlewares/validateRequest";
+import { TravelPlanController } from "./travelPlans.controller";
+import { TravelPlanValidation } from "./travelPlans.validation";
+
+const router = express.Router();
+
+// ==================== Public Routes ====================
+
+// Get all travel plans (public)
+router.get("/", TravelPlanController.getAllTravelPlans);
+
+// Get single travel plan by ID (public)
+router.get("/:id", TravelPlanController.getTravelPlanById);
+
+// ==================== Authenticated User Routes ====================
+
+// Create travel plan
+router.post(
+  "/",
+  auth(UserRole.USER, UserRole.ADMIN),
+  fileUploader.upload.array("images", 5),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (req.body.data) {
+        req.body = TravelPlanValidation.createTravelPlan.parse(
+          JSON.parse(req.body.data)
+        );
+      }
+      // Upload images to Cloudinary and get URLs
+      if (req.files && Array.isArray(req.files)) {
+        const uploadPromises = (req.files as Express.Multer.File[]).map(
+          (file) => fileUploader.uploadToCloudinary(file)
+        );
+        const uploadResults = await Promise.all(uploadPromises);
+        req.body.images = uploadResults.map((result) => result.secure_url);
+      }
+      return TravelPlanController.createTravelPlan(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Get my travel plans
+router.get(
+  "/my/plans",
+  auth(UserRole.USER, UserRole.ADMIN),
+  TravelPlanController.getMyTravelPlans
+);
+
+// Match travel plans based on user interests
+router.get(
+  "/match/travelers",
+  auth(UserRole.USER, UserRole.ADMIN),
+  TravelPlanController.matchTravelPlans
+);
+
+// Update travel plan
+router.patch(
+  "/:id",
+  auth(UserRole.USER, UserRole.ADMIN),
+  fileUploader.upload.array("images", 5),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (req.body.data) {
+        req.body = TravelPlanValidation.updateTravelPlan.parse(
+          JSON.parse(req.body.data)
+        );
+      }
+      // Upload new images to Cloudinary and get URLs
+      if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+        const uploadPromises = (req.files as Express.Multer.File[]).map(
+          (file) => fileUploader.uploadToCloudinary(file)
+        );
+        const uploadResults = await Promise.all(uploadPromises);
+        req.body.images = uploadResults.map((result) => result.secure_url);
+      }
+      return TravelPlanController.updateTravelPlan(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Update travel plan status
+router.patch(
+  "/:id/status",
+  auth(UserRole.USER, UserRole.ADMIN),
+  validateRequest(TravelPlanValidation.updateTravelPlanStatus),
+  TravelPlanController.updateTravelPlanStatus
+);
+
+// Delete travel plan
+router.delete(
+  "/:id",
+  auth(UserRole.USER, UserRole.ADMIN),
+  TravelPlanController.deleteTravelPlan
+);
+
+// ==================== Travel Request Routes ====================
+
+// Send travel request
+router.post(
+  "/requests/send",
+  auth(UserRole.USER, UserRole.ADMIN),
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body = TravelPlanValidation.sendTravelRequest.parse(req.body);
+    return TravelPlanController.sendTravelRequest(req, res, next);
+  }
+);
+
+// Get my travel requests (requests I've sent)
+router.get(
+  "/requests/my",
+  auth(UserRole.USER, UserRole.ADMIN),
+  TravelPlanController.getMyTravelRequests
+);
+
+// Get pending requests for my plans
+router.get(
+  "/requests/pending",
+  auth(UserRole.USER, UserRole.ADMIN),
+  TravelPlanController.getPendingRequestsForMyPlans
+);
+
+// Respond to travel request (approve/reject)
+router.patch(
+  "/requests/:requestId/respond",
+  auth(UserRole.USER, UserRole.ADMIN),
+  validateRequest(TravelPlanValidation.respondToTravelRequest),
+  TravelPlanController.respondToTravelRequest
+);
+
+export const travelPlanRoutes = router;
