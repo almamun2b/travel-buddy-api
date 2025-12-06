@@ -11,7 +11,6 @@ import { IAuthUser } from "../../interfaces/common";
 import { IPaginationOptions } from "../../interfaces/pagination";
 import { userSearchAbleFields } from "./user.constant";
 
-// User select fields to exclude password
 const userSelectFields = {
   id: true,
   email: true,
@@ -33,7 +32,6 @@ const userSelectFields = {
   updatedAt: true,
 };
 
-// Public profile fields (less info than full profile)
 const publicProfileFields = {
   id: true,
   fullName: true,
@@ -50,7 +48,6 @@ const publicProfileFields = {
 const createAdmin = async (req: Request): Promise<Partial<User>> => {
   const file = req.file;
 
-  // Check if email already exists
   const existingUser = await prisma.user.findUnique({
     where: { email: req.body.email },
   });
@@ -87,15 +84,12 @@ const createAdmin = async (req: Request): Promise<Partial<User>> => {
   return result;
 };
 
-// ==================== Admin Operations ====================
-
 const getAllUsers = async (params: any, options: IPaginationOptions) => {
   const { page, limit, skip } = paginationHelper.calculatePagination(options);
   const { searchTerm, ...filterData } = params;
 
   const andConditions: Prisma.UserWhereInput[] = [];
 
-  // Exclude deleted users by default
   andConditions.push({ isDeleted: false });
 
   if (searchTerm) {
@@ -222,8 +216,6 @@ const softDeleteUser = async (id: string) => {
   return result;
 };
 
-// ==================== User Profile Operations ====================
-
 const getMyProfile = async (user: IAuthUser) => {
   const userData = await prisma.user.findFirst({
     where: {
@@ -272,7 +264,6 @@ const updateMyProfile = async (user: IAuthUser, req: Request) => {
     req.body.avatar = uploadToCloudinary?.secure_url;
   }
 
-  // Fields that can be updated by user
   const allowedFields = [
     "fullName",
     "avatar",
@@ -285,7 +276,6 @@ const updateMyProfile = async (user: IAuthUser, req: Request) => {
     "visitedCountries",
   ];
 
-  // Filter only allowed fields
   const updateData: Record<string, any> = {};
   for (const field of allowedFields) {
     if (req.body[field] !== undefined) {
@@ -301,8 +291,6 @@ const updateMyProfile = async (user: IAuthUser, req: Request) => {
 
   return result;
 };
-
-// ==================== Public Profile Operations ====================
 
 const getPublicProfile = async (id: string) => {
   const user = await prisma.user.findFirst({

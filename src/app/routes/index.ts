@@ -8,7 +8,7 @@ import { userRoutes } from "../modules/user/user.routes";
 
 const router = express.Router();
 
-router.use(apiLimiter); // Apply to all routes
+router.use(apiLimiter);
 
 const moduleRoutes = [
   {

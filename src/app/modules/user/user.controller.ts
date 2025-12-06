@@ -7,8 +7,7 @@ import { IAuthUser } from "../../interfaces/common";
 import { userFilterableFields } from "./user.constant";
 import { userService } from "./user.service";
 
-// ==================== Admin Operations ====================
-
+// Admin Operations
 const createAdmin = catchAsync(async (req: Request, res: Response) => {
   const result = await userService.createAdmin(req);
   sendResponse(res, {
@@ -70,8 +69,7 @@ const softDeleteUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// ==================== User Profile Operations ====================
-
+// User Profile Operations
 const getMyProfile = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
     const user = req.user;
@@ -100,8 +98,7 @@ const updateMyProfile = catchAsync(
   }
 );
 
-// ==================== Public Profile Operations ====================
-
+// Public Profile Operations
 const getPublicProfile = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const result = await userService.getPublicProfile(id);

@@ -98,7 +98,6 @@ const handleStripeWebhookEvent = catchAsync(
   }
 );
 
-// Confirm subscription after successful Stripe checkout
 const confirmSubscription = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
     const { sessionId } = req.body;

@@ -5,7 +5,6 @@ import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 import { AuthServices } from "./auth.service";
 
-// Helper function to convert token expiry string to milliseconds
 const parseExpiryToMs = (expiry: string): number => {
   const unit = expiry.slice(-1);
   const value = parseInt(expiry.slice(0, -1));
@@ -23,7 +22,6 @@ const parseExpiryToMs = (expiry: string): number => {
   return multipliers[unit] ? value * multipliers[unit] : 1000 * 60 * 60; // default 1 hour
 };
 
-// Cookie options helper
 const getCookieOptions = (maxAge: number) => ({
   secure: env.nodeEnv === "production",
   httpOnly: true,

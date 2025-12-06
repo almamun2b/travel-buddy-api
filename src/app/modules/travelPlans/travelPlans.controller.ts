@@ -8,8 +8,6 @@ import { IAuthUser } from "../../interfaces/common";
 import { travelPlanFilterableFields } from "./travelPlans.contstant";
 import { TravelPlanService } from "./travelPlans.service";
 
-// ==================== Travel Plan CRUD ====================
-
 const createTravelPlan = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
     const result = await TravelPlanService.createTravelPlan(
@@ -126,8 +124,6 @@ const updateTravelPlanStatus = catchAsync(
   }
 );
 
-// ==================== Matching ====================
-
 const matchTravelPlans = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
     const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
@@ -145,8 +141,6 @@ const matchTravelPlans = catchAsync(
     });
   }
 );
-
-// ==================== Travel Requests ====================
 
 const sendTravelRequest = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {

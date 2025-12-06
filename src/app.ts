@@ -10,7 +10,7 @@ import { env } from "./config/env";
 const app: Application = express();
 app.use(cookieParser());
 
-// Stripe webhook - must be before express.json() middleware
+// Stripe webhook
 app.post(
   "/webhook",
   express.raw({ type: "application/json" }),

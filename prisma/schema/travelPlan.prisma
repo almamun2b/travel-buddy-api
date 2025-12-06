@@ -9,8 +9,8 @@ model TravelPlan {
   budget      Float?
   travelType  TravelType
   maxMembers  Int        @default(5)
-  activities  String[] // e.g., hiking, sightseeing, food tours
-  images      String[] // URLs of uploaded images
+  activities  String[]
+  images      String[]
 
   // Status
   status    TravelPlanStatus @default(OPEN)
@@ -43,7 +43,7 @@ model TravelRequest {
   travelPlan TravelPlan @relation(fields: [travelPlanId], references: [id], onDelete: Cascade)
   user       User       @relation("TravelRequests", fields: [userId], references: [id])
 
-  @@unique([travelPlanId, userId]) // One request per user per plan
+  @@unique([travelPlanId, userId])
   @@map("travel_requests")
 }
 
@@ -64,6 +64,6 @@ model Review {
   reviewer   User       @relation("ReviewsGiven", fields: [reviewerId], references: [id])
   reviewee   User       @relation("ReviewsReceived", fields: [revieweeId], references: [id])
 
-  @@unique([travelPlanId, reviewerId, revieweeId]) // One review per pair per trip
+  @@unique([travelPlanId, reviewerId, revieweeId])
   @@map("reviews")
 }

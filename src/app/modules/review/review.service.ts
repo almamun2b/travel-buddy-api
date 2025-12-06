@@ -1,9 +1,9 @@
 import httpStatus from "http-status";
+import { paginationHelper } from "../../../helpers/paginationHelper";
 import prisma from "../../../shared/prisma";
 import ApiError from "../../errors/ApiError";
 import { IAuthUser } from "../../interfaces/common";
 import { IPaginationOptions } from "../../interfaces/pagination";
-import { paginationHelper } from "../../../helpers/paginationHelper";
 
 interface ICreateReviewPayload {
   travelPlanId: string;
@@ -17,7 +17,6 @@ const createReview = async (user: IAuthUser, payload: ICreateReviewPayload) => {
     throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated!");
   }
 
-  // Check if travel plan exists and is completed
   const travelPlan = await prisma.travelPlan.findFirst({
     where: { id: payload.travelPlanId, isDeleted: false },
   });
@@ -33,7 +32,6 @@ const createReview = async (user: IAuthUser, payload: ICreateReviewPayload) => {
     );
   }
 
-  // Check if user was part of the travel plan
   const wasParticipant =
     travelPlan.creatorId === user.id ||
     (await prisma.travelRequest.findFirst({
@@ -51,7 +49,6 @@ const createReview = async (user: IAuthUser, payload: ICreateReviewPayload) => {
     );
   }
 
-  // Check if reviewee was part of the travel plan
   const revieweeWasParticipant =
     travelPlan.creatorId === payload.revieweeId ||
     (await prisma.travelRequest.findFirst({
@@ -69,12 +66,10 @@ const createReview = async (user: IAuthUser, payload: ICreateReviewPayload) => {
     );
   }
 
-  // Cannot review yourself
   if (user.id === payload.revieweeId) {
     throw new ApiError(httpStatus.BAD_REQUEST, "You cannot review yourself!");
   }
 
-  // Check if already reviewed
   const existingReview = await prisma.review.findUnique({
     where: {
       travelPlanId_reviewerId_revieweeId: {
@@ -110,7 +105,10 @@ const createReview = async (user: IAuthUser, payload: ICreateReviewPayload) => {
   return result;
 };
 
-const getReviewsForUser = async (userId: string, options: IPaginationOptions) => {
+const getReviewsForUser = async (
+  userId: string,
+  options: IPaginationOptions
+) => {
   const { page, limit, skip } = paginationHelper.calculatePagination(options);
 
   const result = await prisma.review.findMany({
@@ -126,7 +124,6 @@ const getReviewsForUser = async (userId: string, options: IPaginationOptions) =>
 
   const total = await prisma.review.count({ where: { revieweeId: userId } });
 
-  // Calculate average rating
   const avgRating = await prisma.review.aggregate({
     where: { revieweeId: userId },
     _avg: { rating: true },
@@ -162,4 +159,3 @@ export const ReviewService = {
   getReviewsForUser,
   getMyReviews,
 };
-

@@ -5,7 +5,6 @@ const validateRequest =
   (schema: ZodType) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Validate req.body directly with flat schema (no body wrapper)
       req.body = await schema.parseAsync(req.body);
       return next();
     } catch (err) {

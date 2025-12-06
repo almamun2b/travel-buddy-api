@@ -8,17 +8,12 @@ import { TravelPlanValidation } from "./travelPlans.validation";
 
 const router = express.Router();
 
-// ==================== Public Routes ====================
-
-// Get all travel plans (public)
+//  Public Routes
 router.get("/", TravelPlanController.getAllTravelPlans);
 
-// Get single travel plan by ID (public)
 router.get("/:id", TravelPlanController.getTravelPlanById);
 
-// ==================== Authenticated User Routes ====================
-
-// Create travel plan
+//  Authenticated User Routes
 router.post(
   "/",
   auth(UserRole.USER, UserRole.ADMIN),
@@ -30,7 +25,6 @@ router.post(
           JSON.parse(req.body.data)
         );
       }
-      // Upload images to Cloudinary and get URLs
       if (req.files && Array.isArray(req.files)) {
         const uploadPromises = (req.files as Express.Multer.File[]).map(
           (file) => fileUploader.uploadToCloudinary(file)
@@ -45,21 +39,18 @@ router.post(
   }
 );
 
-// Get my travel plans
 router.get(
   "/my/plans",
   auth(UserRole.USER, UserRole.ADMIN),
   TravelPlanController.getMyTravelPlans
 );
 
-// Match travel plans based on user interests
 router.get(
   "/match/travelers",
   auth(UserRole.USER, UserRole.ADMIN),
   TravelPlanController.matchTravelPlans
 );
 
-// Update travel plan
 router.patch(
   "/:id",
   auth(UserRole.USER, UserRole.ADMIN),
@@ -71,7 +62,6 @@ router.patch(
           JSON.parse(req.body.data)
         );
       }
-      // Upload new images to Cloudinary and get URLs
       if (req.files && Array.isArray(req.files) && req.files.length > 0) {
         const uploadPromises = (req.files as Express.Multer.File[]).map(
           (file) => fileUploader.uploadToCloudinary(file)
@@ -86,7 +76,6 @@ router.patch(
   }
 );
 
-// Update travel plan status
 router.patch(
   "/:id/status",
   auth(UserRole.USER, UserRole.ADMIN),
@@ -94,16 +83,12 @@ router.patch(
   TravelPlanController.updateTravelPlanStatus
 );
 
-// Delete travel plan
 router.delete(
   "/:id",
   auth(UserRole.USER, UserRole.ADMIN),
   TravelPlanController.deleteTravelPlan
 );
 
-// ==================== Travel Request Routes ====================
-
-// Send travel request
 router.post(
   "/requests/send",
   auth(UserRole.USER, UserRole.ADMIN),
@@ -113,21 +98,18 @@ router.post(
   }
 );
 
-// Get my travel requests (requests I've sent)
 router.get(
   "/requests/my",
   auth(UserRole.USER, UserRole.ADMIN),
   TravelPlanController.getMyTravelRequests
 );
 
-// Get pending requests for my plans
 router.get(
   "/requests/pending",
   auth(UserRole.USER, UserRole.ADMIN),
   TravelPlanController.getPendingRequestsForMyPlans
 );
 
-// Respond to travel request (approve/reject)
 router.patch(
   "/requests/:requestId/respond",
   auth(UserRole.USER, UserRole.ADMIN),

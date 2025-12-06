@@ -8,8 +8,6 @@ import { userValidation } from "./user.validation";
 
 const router = express.Router();
 
-// ==================== Admin Routes ====================
-
 // Get all users (Admin only)
 router.get("/", auth(UserRole.ADMIN), userController.getAllUsers);
 
@@ -27,7 +25,7 @@ router.post(
   }
 );
 
-// Update user status (Admin only) - block, activate, delete users
+// Update user status (Admin only)
 router.patch(
   "/:id/status",
   auth(UserRole.ADMIN),
@@ -37,8 +35,6 @@ router.patch(
 
 // Soft delete user (Admin only)
 router.delete("/:id", auth(UserRole.ADMIN), userController.softDeleteUser);
-
-// ==================== User Profile Routes ====================
 
 // Get my profile
 router.get(
@@ -60,9 +56,7 @@ router.patch(
   }
 );
 
-// ==================== Public User Routes ====================
-
-// Get user public profile (for viewing other travelers)
+// Get user public profile
 router.get("/profile/:id", userController.getPublicProfile);
 
 export const userRoutes = router;

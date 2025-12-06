@@ -6,9 +6,8 @@ import { ReviewValidation } from "./review.validation";
 
 const router = express.Router();
 
-// ==================== Authenticated Routes ====================
+// Authenticated Routes
 
-// Create a review
 router.post(
   "/",
   auth(UserRole.USER, UserRole.ADMIN),
@@ -18,16 +17,14 @@ router.post(
   }
 );
 
-// Get my reviews (reviews I've received)
 router.get(
   "/my",
   auth(UserRole.USER, UserRole.ADMIN),
   ReviewController.getMyReviews
 );
 
-// ==================== Public Routes ====================
+// Public Routes
 
-// Get reviews for a specific user
 router.get("/:userId", ReviewController.getReviewsForUser);
 
 export const reviewRoutes = router;

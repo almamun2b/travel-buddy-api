@@ -7,12 +7,10 @@ import prisma from "../../../shared/prisma";
 import ApiError from "../../errors/ApiError";
 import { IAuthUser } from "../../interfaces/common";
 
-// Free plan limits
 const FREE_PLAN_LIMITS = {
   maxTravelPlans: 3,
 };
 
-// Subscription plan prices (in cents)
 const PLAN_PRICES: Record<SubscriptionPlan, number> = {
   FREE: 0, // Free
   MONTHLY: 999, // $9.99/month
@@ -55,7 +53,6 @@ const createCheckoutSession = async (
     throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
   }
 
-  // Check if user already has an active PAID subscription
   if (
     userData.subscription?.status === SubscriptionStatus.ACTIVE &&
     (userData.subscription.plan === SubscriptionPlan.MONTHLY ||
@@ -67,7 +64,6 @@ const createCheckoutSession = async (
     );
   }
 
-  // Create or get Stripe customer (from existing subscription or user metadata)
   let customerId = userData.subscription?.stripeCustomerId;
 
   if (!customerId) {
@@ -79,7 +75,6 @@ const createCheckoutSession = async (
     customerId = customer.id;
   }
 
-  // Create checkout session
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],
@@ -98,7 +93,6 @@ const createCheckoutSession = async (
       },
     ],
     mode: "subscription",
-    // Append session_id to success URL - Stripe replaces {CHECKOUT_SESSION_ID} with actual ID
     success_url: `${env.stripe.successUrl}?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: env.stripe.cancelUrl,
     metadata: {
@@ -115,7 +109,6 @@ const getSubscriptionStatus = async (user: IAuthUser) => {
     where: { userId: user?.id },
   });
 
-  // If no subscription or not active, treat as FREE plan (implicit)
   if (!subscription || subscription.status !== SubscriptionStatus.ACTIVE) {
     return {
       hasSubscription: false,
@@ -126,7 +119,6 @@ const getSubscriptionStatus = async (user: IAuthUser) => {
     };
   }
 
-  // Premium plan (MONTHLY/YEARLY) - active subscription exists
   return {
     hasSubscription: true,
     plan: subscription.plan,
@@ -149,15 +141,12 @@ const cancelSubscription = async (user: IAuthUser) => {
     );
   }
 
-  // Cancel on Stripe
   await stripe.subscriptions.cancel(subscription.stripeSubId);
 
-  // Delete subscription record (user goes back to implicit FREE)
   await prisma.subscription.delete({
     where: { id: subscription.id },
   });
 
-  // Remove verified badge
   await prisma.user.update({
     where: { id: user?.id },
     data: { hasVerifiedBadge: false },
@@ -178,7 +167,6 @@ const handleStripeWebhookEvent = async (event: Stripe.Event) => {
           session.subscription as string
         );
 
-        // Calculate end date (1 month from now)
         const endDate = new Date();
         endDate.setMonth(endDate.getMonth() + 1);
 
@@ -200,7 +188,6 @@ const handleStripeWebhookEvent = async (event: Stripe.Event) => {
           },
         });
 
-        // Grant verified badge for all paid subscribers
         await prisma.user.update({
           where: { id: userId },
           data: { hasVerifiedBadge: true },
@@ -231,12 +218,10 @@ const handleStripeWebhookEvent = async (event: Stripe.Event) => {
       });
 
       if (dbSubscription) {
-        // Delete subscription record (user goes back to implicit FREE)
         await prisma.subscription.delete({
           where: { id: dbSubscription.id },
         });
 
-        // Remove verified badge
         await prisma.user.update({
           where: { id: dbSubscription.userId },
           data: { hasVerifiedBadge: false },
@@ -265,7 +250,6 @@ const handleStripeWebhookEvent = async (event: Stripe.Event) => {
   }
 };
 
-// Helper to check if user has premium (paid) subscription
 const hasPremiumSubscription = async (userId: string): Promise<boolean> => {
   const subscription = await prisma.subscription.findUnique({
     where: { userId },
@@ -278,20 +262,17 @@ const hasPremiumSubscription = async (userId: string): Promise<boolean> => {
   );
 };
 
-// Confirm subscription after successful checkout (use session_id from Stripe redirect)
 const confirmSubscription = async (user: IAuthUser, sessionId: string) => {
   if (!user?.id) {
     throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated!");
   }
 
-  // Retrieve the checkout session from Stripe
   const session = await stripe.checkout.sessions.retrieve(sessionId);
 
   if (session.payment_status !== "paid") {
     throw new ApiError(httpStatus.BAD_REQUEST, "Payment not completed!");
   }
 
-  // Verify the session belongs to this user
   if (session.metadata?.userId !== user.id) {
     throw new ApiError(
       httpStatus.FORBIDDEN,
@@ -305,12 +286,10 @@ const confirmSubscription = async (user: IAuthUser, sessionId: string) => {
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid subscription plan!");
   }
 
-  // Retrieve the Stripe subscription
   const stripeSubscription = await stripe.subscriptions.retrieve(
     session.subscription as string
   );
 
-  // Calculate end date based on plan
   const endDate = new Date();
   if (plan === SubscriptionPlan.YEARLY) {
     endDate.setFullYear(endDate.getFullYear() + 1);
@@ -318,7 +297,6 @@ const confirmSubscription = async (user: IAuthUser, sessionId: string) => {
     endDate.setMonth(endDate.getMonth() + 1);
   }
 
-  // Upsert subscription in database
   const subscription = await prisma.subscription.upsert({
     where: { userId: user.id },
     create: {
@@ -340,7 +318,6 @@ const confirmSubscription = async (user: IAuthUser, sessionId: string) => {
     },
   });
 
-  // Grant verified badge
   await prisma.user.update({
     where: { id: user.id },
     data: { hasVerifiedBadge: true },

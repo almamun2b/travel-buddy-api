@@ -8,7 +8,6 @@ import { IPaginationOptions } from "../../interfaces/pagination";
 import { PaymentService } from "../payment/payment.service";
 import { travelPlanSearchableFields } from "./travelPlans.contstant";
 
-// Select fields for travel plan responses
 const travelPlanSelectFields = {
   id: true,
   title: true,
@@ -35,8 +34,6 @@ const travelPlanSelectFields = {
   },
 };
 
-// ==================== Travel Plan CRUD ====================
-
 interface ICreateTravelPlanPayload {
   title: string;
   description: string;
@@ -58,10 +55,8 @@ const createTravelPlan = async (
     throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated!");
   }
 
-  // Admins have no restrictions (always treated as premium)
   const isAdmin = user.role === "ADMIN";
 
-  // Check travel plan limit for non-admin free users
   if (!isAdmin) {
     const hasPremium = await PaymentService.hasPremiumSubscription(user.id);
 
@@ -108,10 +103,8 @@ const getAllTravelPlans = async (params: any, options: IPaginationOptions) => {
 
   const andConditions: Prisma.TravelPlanWhereInput[] = [];
 
-  // Only show non-deleted and open plans
   andConditions.push({ isDeleted: false, status: TravelPlanStatus.OPEN });
 
-  // Search term
   if (searchTerm) {
     andConditions.push({
       OR: travelPlanSearchableFields.map((field) => ({
@@ -120,19 +113,16 @@ const getAllTravelPlans = async (params: any, options: IPaginationOptions) => {
     });
   }
 
-  // Destination filter
   if (destination) {
     andConditions.push({
       destination: { contains: destination, mode: "insensitive" },
     });
   }
 
-  // Travel type filter
   if (travelType) {
     andConditions.push({ travelType });
   }
 
-  // Budget range filter
   if (minBudget || maxBudget) {
     andConditions.push({
       budget: {
@@ -142,7 +132,6 @@ const getAllTravelPlans = async (params: any, options: IPaginationOptions) => {
     });
   }
 
-  // Date range filter
   if (startDate) {
     andConditions.push({ startDate: { gte: new Date(startDate) } });
   }
@@ -150,7 +139,6 @@ const getAllTravelPlans = async (params: any, options: IPaginationOptions) => {
     andConditions.push({ endDate: { lte: new Date(endDate) } });
   }
 
-  // Other filters
   if (Object.keys(filterData).length > 0) {
     andConditions.push({
       AND: Object.keys(filterData).map((key) => ({
@@ -306,15 +294,12 @@ const updateTravelPlanStatus = async (
   return result;
 };
 
-// ==================== Matching & Search ====================
-
 const matchTravelPlans = async (
   user: IAuthUser,
   options: IPaginationOptions
 ) => {
   const { page, limit, skip } = paginationHelper.calculatePagination(options);
 
-  // Get user's travel interests
   const userData = await prisma.user.findUnique({
     where: { id: user?.id },
     select: { travelInterests: true, currentLocation: true },
@@ -323,10 +308,9 @@ const matchTravelPlans = async (
   const andConditions: Prisma.TravelPlanWhereInput[] = [
     { isDeleted: false },
     { status: TravelPlanStatus.OPEN },
-    { creatorId: { not: user?.id } }, // Exclude own plans
+    { creatorId: { not: user?.id } },
   ];
 
-  // Match by user's interests
   if (userData?.travelInterests && userData.travelInterests.length > 0) {
     andConditions.push({
       activities: { hasSome: userData.travelInterests },
@@ -347,8 +331,6 @@ const matchTravelPlans = async (
 
   return { meta: { page, limit, total }, data: result };
 };
-
-// ==================== Travel Requests ====================
 
 const sendTravelRequest = async (
   user: IAuthUser,
@@ -377,12 +359,10 @@ const sendTravelRequest = async (
     );
   }
 
-  // Check max members
   if (travelPlan._count.travelRequests >= travelPlan.maxMembers) {
     throw new ApiError(httpStatus.BAD_REQUEST, "This travel plan is full!");
   }
 
-  // Check if already requested
   const existingRequest = await prisma.travelRequest.findUnique({
     where: {
       travelPlanId_userId: { travelPlanId, userId: user?.id as string },

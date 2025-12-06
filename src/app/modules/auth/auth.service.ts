@@ -20,13 +20,11 @@ interface IRegisterPayload {
   visitedCountries?: string[];
 }
 
-// Generate a random 6-digit verification code
 const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 const registerUser = async (payload: IRegisterPayload) => {
-  // Check if user already exists
   const existingUser = await prisma.user.findUnique({
     where: { email: payload.email },
   });
@@ -38,17 +36,14 @@ const registerUser = async (payload: IRegisterPayload) => {
     );
   }
 
-  // Hash password
   const hashedPassword = await bcrypt.hash(
     payload.password,
     parseInt(env.bcryptSaltRound)
   );
 
-  // Generate verification code
   const verificationCode = generateVerificationCode();
   const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  // Create user with isVerified = false and verification code
   const newUser = await prisma.user.create({
     data: {
       email: payload.email,
@@ -78,7 +73,6 @@ const registerUser = async (payload: IRegisterPayload) => {
     },
   });
 
-  // Send verification email
   await emailSender({
     email: payload.email,
     subject: "Verify Your Email Address",
@@ -130,7 +124,6 @@ const verifyEmail = async (payload: { email: string; code: string }) => {
     );
   }
 
-  // Check if code is expired
   if (new Date() > userData.verificationCode.expiresAt) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -138,12 +131,10 @@ const verifyEmail = async (payload: { email: string; code: string }) => {
     );
   }
 
-  // Verify the code
   if (userData.verificationCode.code !== payload.code) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid verification code!");
   }
 
-  // Update user as verified and delete the verification code
   await prisma.$transaction([
     prisma.user.update({
       where: { id: userData.id },
@@ -173,11 +164,9 @@ const resendVerificationCode = async (payload: { email: string }) => {
     throw new ApiError(httpStatus.BAD_REQUEST, "Email is already verified!");
   }
 
-  // Generate new verification code
   const verificationCode = generateVerificationCode();
   const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  // Upsert verification code
   await prisma.verificationCode.upsert({
     where: { userId: userData.id },
     update: {
@@ -191,7 +180,6 @@ const resendVerificationCode = async (payload: { email: string }) => {
     },
   });
 
-  // Send verification email
   await emailSender({
     email: payload.email,
     subject: "Your New Verification Code",
@@ -239,7 +227,6 @@ const loginUser = async (payload: { email: string; password: string }) => {
     throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid credentials!");
   }
 
-  // Check if user's email is verified (only for USER role, not ADMIN)
   if (userData.role === UserRole.USER && !userData.isVerified) {
     throw new ApiError(
       httpStatus.FORBIDDEN,
@@ -439,13 +426,11 @@ const resetPassword = async (
     throw new ApiError(httpStatus.FORBIDDEN, "Invalid or expired reset token!");
   }
 
-  // Hash new password
   const hashedPassword = await bcrypt.hash(
     payload.password,
     parseInt(env.bcryptSaltRound)
   );
 
-  // Update password in database
   await prisma.user.update({
     where: {
       id: payload.id,

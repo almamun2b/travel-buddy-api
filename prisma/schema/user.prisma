@@ -6,7 +6,6 @@ model User {
   status             UserStatus @default(ACTIVE)
   needPasswordChange Boolean    @default(false)
 
-  // Profile Information (shared by Admin and User)
   fullName        String
   avatar          String?
   contactNumber   String?
@@ -15,11 +14,9 @@ model User {
   gender          Gender?
   currentLocation String?
 
-  // Travel-specific fields (used by USER role)
-  travelInterests  String[] // e.g., hiking, food tours, photography
-  visitedCountries String[] // Array of countries visited
+  travelInterests  String[]
+  visitedCountries String[]
 
-  // Subscription & Verification (used by USER role)
   isVerified       Boolean @default(false)
   hasVerifiedBadge Boolean @default(false)
 
