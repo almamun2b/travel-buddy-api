@@ -14,6 +14,8 @@ const createAdmin = z.object({
 
 const updateStatus = z.object({
   status: z.enum([UserStatus.ACTIVE, UserStatus.BLOCKED, UserStatus.DELETED]),
+  isVerified: z.boolean().optional(),
+  hasVerifiedBadge: z.boolean().optional(),
 });
 
 const updateProfile = z.object({

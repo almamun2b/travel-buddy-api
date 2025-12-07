@@ -170,7 +170,11 @@ const getUserById = async (id: string) => {
 
 const changeUserStatus = async (
   id: string,
-  payload: { status: UserStatus }
+  payload: {
+    status?: UserStatus;
+    isVerified?: boolean;
+    hasVerifiedBadge?: boolean;
+  }
 ) => {
   const user = await prisma.user.findFirst({
     where: {
@@ -185,7 +189,7 @@ const changeUserStatus = async (
 
   const result = await prisma.user.update({
     where: { id },
-    data: { status: payload.status },
+    data: { ...payload },
     select: userSelectFields,
   });
 
