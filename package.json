@@ -8,12 +8,15 @@
   },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
     "db:generate": "prisma generate ",
     "db:migrate": "prisma migrate",
     "db:push": "prisma db push",
     "db:pull": "prisma db pull",
     "db:studio": "prisma studio",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "stripe:webhook": "stripe listen --forward-to http://localhost:3000/webhook"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.9",
