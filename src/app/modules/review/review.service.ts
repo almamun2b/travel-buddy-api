@@ -154,8 +154,98 @@ const getMyReviews = async (user: IAuthUser, options: IPaginationOptions) => {
   return { meta: { page, limit, total }, data: result };
 };
 
+const getReviewsGivenByMe = async (
+  user: IAuthUser,
+  options: IPaginationOptions
+) => {
+  const { page, limit, skip } = paginationHelper.calculatePagination(options);
+
+  const result = await prisma.review.findMany({
+    where: { reviewerId: user?.id },
+    skip,
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    include: {
+      travelPlan: { select: { id: true, title: true, destination: true } },
+      reviewee: { select: { id: true, fullName: true, avatar: true } },
+    },
+  });
+
+  const total = await prisma.review.count({ where: { reviewerId: user?.id } });
+
+  return { meta: { page, limit, total }, data: result };
+};
+
+const updateReview = async (
+  user: IAuthUser,
+  reviewId: string,
+  payload: { rating?: number; comment?: string }
+) => {
+  if (!user?.id) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated!");
+  }
+
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+  });
+
+  if (!review) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Review not found!");
+  }
+
+  if (review.reviewerId !== user.id) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You can only edit your own reviews!"
+    );
+  }
+
+  const result = await prisma.review.update({
+    where: { id: reviewId },
+    data: payload,
+    include: {
+      travelPlan: { select: { id: true, title: true, destination: true } },
+      reviewer: { select: { id: true, fullName: true, avatar: true } },
+      reviewee: { select: { id: true, fullName: true, avatar: true } },
+    },
+  });
+
+  return result;
+};
+
+const deleteReview = async (user: IAuthUser, reviewId: string) => {
+  if (!user?.id) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated!");
+  }
+
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+  });
+
+  if (!review) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Review not found!");
+  }
+
+  // User can delete their own review, Admin can delete any review
+  if (review.reviewerId !== user.id && user.role !== "ADMIN") {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "You can only delete your own reviews!"
+    );
+  }
+
+  await prisma.review.delete({
+    where: { id: reviewId },
+  });
+
+  return { message: "Review deleted successfully!" };
+};
+
 export const ReviewService = {
   createReview,
   getReviewsForUser,
   getMyReviews,
+  getReviewsGivenByMe,
+  updateReview,
+  deleteReview,
 };

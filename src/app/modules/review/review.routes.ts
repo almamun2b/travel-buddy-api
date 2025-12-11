@@ -7,7 +7,6 @@ import { ReviewValidation } from "./review.validation";
 const router = express.Router();
 
 // Authenticated Routes
-
 router.post(
   "/",
   auth(UserRole.USER, UserRole.ADMIN),
@@ -23,8 +22,28 @@ router.get(
   ReviewController.getMyReviews
 );
 
-// Public Routes
+router.get(
+  "/given",
+  auth(UserRole.USER, UserRole.ADMIN),
+  ReviewController.getReviewsGivenByMe
+);
 
-router.get("/:userId", ReviewController.getReviewsForUser);
+router.patch(
+  "/:id",
+  auth(UserRole.USER, UserRole.ADMIN),
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body = ReviewValidation.updateReview.parse(req.body);
+    return ReviewController.updateReview(req, res, next);
+  }
+);
+
+router.delete(
+  "/:id",
+  auth(UserRole.USER, UserRole.ADMIN),
+  ReviewController.deleteReview
+);
+
+// Public Routes
+router.get("/user/:userId", ReviewController.getReviewsForUser);
 
 export const reviewRoutes = router;

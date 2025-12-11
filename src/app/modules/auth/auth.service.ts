@@ -19,6 +19,26 @@ interface IRegisterPayload {
   travelInterests?: string[];
   visitedCountries?: string[];
 }
+const userSelectFields = {
+  id: true,
+  email: true,
+  role: true,
+  fullName: true,
+  avatar: true,
+  contactNumber: true,
+  bio: true,
+  dateOfBirth: true,
+  gender: true,
+  currentLocation: true,
+  travelInterests: true,
+  visitedCountries: true,
+  isVerified: true,
+  hasVerifiedBadge: true,
+  status: true,
+  isDeleted: true,
+  createdAt: true,
+  updatedAt: true,
+};
 
 const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -254,10 +274,11 @@ const loginUser = async (payload: { email: string; password: string }) => {
     env.jwt.refreshTokenExpiresIn
   );
 
+  const { password, ...user } = userData;
   return {
     accessToken,
     refreshToken,
-    needPasswordChange: userData.needPasswordChange,
+    user,
   };
 };
 

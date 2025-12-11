@@ -10,6 +10,24 @@ const router = express.Router();
 
 // Get all users (Admin only)
 router.get("/", auth(UserRole.ADMIN), userController.getAllUsers);
+// Get dashboard stats (authenticated users only)
+router.get(
+  "/dashboard-stats",
+  auth(UserRole.ADMIN, UserRole.USER),
+  userController.getDashboardStats
+);
+// Get my profile
+router.get(
+  "/profile/me",
+  auth(UserRole.ADMIN, UserRole.USER),
+  userController.getMyProfile
+);
+
+// Explore travelers (public)
+router.get("/explore/travelers", userController.exploreTravelers);
+
+// Get user public profile
+router.get("/profile/:id", userController.getPublicProfile);
 
 // Get single user by ID (Admin only)
 router.get("/:id", auth(UserRole.ADMIN), userController.getUserById);
@@ -36,13 +54,6 @@ router.patch(
 // Soft delete user (Admin only)
 router.delete("/:id", auth(UserRole.ADMIN), userController.softDeleteUser);
 
-// Get my profile
-router.get(
-  "/profile/me",
-  auth(UserRole.ADMIN, UserRole.USER),
-  userController.getMyProfile
-);
-
 // Update my profile
 router.patch(
   "/profile/update",
@@ -55,8 +66,5 @@ router.patch(
     return userController.updateMyProfile(req, res, next);
   }
 );
-
-// Get user public profile
-router.get("/profile/:id", userController.getPublicProfile);
 
 export const userRoutes = router;

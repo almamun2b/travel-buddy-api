@@ -56,9 +56,62 @@ const getMyReviews = catchAsync(
   }
 );
 
+const getReviewsGivenByMe = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+
+    const result = await ReviewService.getReviewsGivenByMe(
+      req.user as IAuthUser,
+      options
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Reviews given by me retrieved successfully!",
+      meta: result.meta,
+      data: result.data,
+    });
+  }
+);
+
+const updateReview = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const { id } = req.params;
+    const result = await ReviewService.updateReview(
+      req.user as IAuthUser,
+      id,
+      req.body
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Review updated successfully!",
+      data: result,
+    });
+  }
+);
+
+const deleteReview = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const { id } = req.params;
+    const result = await ReviewService.deleteReview(req.user as IAuthUser, id);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: result.message,
+      data: null,
+    });
+  }
+);
+
 export const ReviewController = {
   createReview,
   getReviewsForUser,
   getMyReviews,
+  getReviewsGivenByMe,
+  updateReview,
+  deleteReview,
 };
-

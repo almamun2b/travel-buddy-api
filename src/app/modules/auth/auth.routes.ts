@@ -1,7 +1,6 @@
 import { UserRole } from "@prisma/client";
 import express from "express";
 import auth from "../../middlewares/auth";
-import { authLimiter } from "../../middlewares/rateLimiter";
 import validateRequest from "../../middlewares/validateRequest";
 import { AuthController } from "./auth.controller";
 import { AuthValidation } from "./auth.validation";
@@ -11,28 +10,24 @@ const router = express.Router();
 // Public routes
 router.post(
   "/register",
-  authLimiter,
   validateRequest(AuthValidation.registerUser),
   AuthController.registerUser
 );
 
 router.post(
   "/verify-email",
-  authLimiter,
   validateRequest(AuthValidation.verifyEmail),
   AuthController.verifyEmail
 );
 
 router.post(
   "/resend-verification-code",
-  authLimiter,
   validateRequest(AuthValidation.resendVerificationCode),
   AuthController.resendVerificationCode
 );
 
 router.post(
   "/login",
-  authLimiter,
   validateRequest(AuthValidation.loginUser),
   AuthController.loginUser
 );

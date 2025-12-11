@@ -313,6 +313,214 @@ const getPublicProfile = async (id: string) => {
   return user;
 };
 
+const exploreTravelers = async (
+  params: {
+    searchTerm?: string;
+    travelInterest?: string;
+    currentLocation?: string;
+    hasVerifiedBadge?: string;
+  },
+  options: IPaginationOptions
+) => {
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(options);
+
+  const andConditions: Prisma.UserWhereInput[] = [
+    { role: UserRole.USER },
+    { status: UserStatus.ACTIVE },
+    { isDeleted: false },
+  ];
+
+  if (params.searchTerm) {
+    andConditions.push({
+      OR: [
+        { fullName: { contains: params.searchTerm, mode: "insensitive" } },
+        { bio: { contains: params.searchTerm, mode: "insensitive" } },
+        {
+          currentLocation: { contains: params.searchTerm, mode: "insensitive" },
+        },
+      ],
+    });
+  }
+
+  if (params.travelInterest) {
+    andConditions.push({
+      travelInterests: { has: params.travelInterest },
+    });
+  }
+
+  if (params.currentLocation) {
+    andConditions.push({
+      currentLocation: {
+        contains: params.currentLocation,
+        mode: "insensitive",
+      },
+    });
+  }
+
+  if (params.hasVerifiedBadge === "true") {
+    andConditions.push({ hasVerifiedBadge: true });
+  }
+
+  const whereConditions: Prisma.UserWhereInput = { AND: andConditions };
+
+  const result = await prisma.user.findMany({
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy: { [sortBy]: sortOrder },
+    select: {
+      ...publicProfileFields,
+      _count: {
+        select: { reviewsReceived: true, travelPlans: true },
+      },
+    },
+  });
+
+  const total = await prisma.user.count({ where: whereConditions });
+
+  return {
+    meta: { page, limit, total },
+    data: result,
+  };
+};
+
+const getDashboardStats = async (user: IAuthUser) => {
+  if (!user?.id) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated!");
+  }
+
+  if (user.role === "ADMIN") {
+    // Admin dashboard stats
+    const [totalUsers, totalTravelPlans, totalReviews, activeSubscriptions] =
+      await Promise.all([
+        prisma.user.count({ where: { isDeleted: false, role: UserRole.USER } }),
+        prisma.travelPlan.count({ where: { isDeleted: false } }),
+        prisma.review.count(),
+        prisma.subscription.count({
+          where: {
+            status: "ACTIVE",
+            plan: { in: ["MONTHLY", "YEARLY"] },
+          },
+        }),
+      ]);
+
+    const recentUsers = await prisma.user.findMany({
+      where: { isDeleted: false, role: UserRole.USER },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, fullName: true, avatar: true, createdAt: true },
+    });
+
+    const recentTravelPlans = await prisma.travelPlan.findMany({
+      where: { isDeleted: false },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        destination: true,
+        status: true,
+        createdAt: true,
+        creator: { select: { fullName: true, avatar: true } },
+      },
+    });
+
+    return {
+      stats: {
+        totalUsers,
+        totalTravelPlans,
+        totalReviews,
+        activeSubscriptions,
+      },
+      recentUsers,
+      recentTravelPlans,
+    };
+  } else {
+    // User dashboard stats
+    const [
+      myTravelPlansCount,
+      pendingRequestsCount,
+      approvedRequestsCount,
+      reviewsReceivedCount,
+    ] = await Promise.all([
+      prisma.travelPlan.count({
+        where: { creatorId: user.id, isDeleted: false },
+      }),
+      prisma.travelRequest.count({
+        where: {
+          travelPlan: { creatorId: user.id },
+          status: "PENDING",
+        },
+      }),
+      prisma.travelRequest.count({
+        where: { userId: user.id, status: "APPROVED" },
+      }),
+      prisma.review.count({ where: { revieweeId: user.id } }),
+    ]);
+
+    // Upcoming travel plans (my own + approved requests)
+    const upcomingPlans = await prisma.travelPlan.findMany({
+      where: {
+        OR: [
+          { creatorId: user.id },
+          { travelRequests: { some: { userId: user.id, status: "APPROVED" } } },
+        ],
+        startDate: { gte: new Date() },
+        isDeleted: false,
+        status: "OPEN",
+      },
+      orderBy: { startDate: "asc" },
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        destination: true,
+        startDate: true,
+        endDate: true,
+        creator: { select: { id: true, fullName: true, avatar: true } },
+      },
+    });
+
+    // Matched travelers (people going to similar destinations based on interests)
+    const userData = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { travelInterests: true },
+    });
+
+    const matchedTravelers = await prisma.user.findMany({
+      where: {
+        id: { not: user.id },
+        role: UserRole.USER,
+        status: UserStatus.ACTIVE,
+        isDeleted: false,
+        travelInterests: {
+          hasSome: userData?.travelInterests || [],
+        },
+      },
+      take: 5,
+      select: {
+        id: true,
+        fullName: true,
+        avatar: true,
+        travelInterests: true,
+        hasVerifiedBadge: true,
+      },
+    });
+
+    return {
+      stats: {
+        myTravelPlans: myTravelPlansCount,
+        pendingRequests: pendingRequestsCount,
+        approvedTrips: approvedRequestsCount,
+        reviewsReceived: reviewsReceivedCount,
+      },
+      upcomingPlans,
+      matchedTravelers,
+    };
+  }
+};
+
 export const userService = {
   createAdmin,
   getAllUsers,
@@ -322,4 +530,6 @@ export const userService = {
   getMyProfile,
   updateMyProfile,
   getPublicProfile,
+  exploreTravelers,
+  getDashboardStats,
 };

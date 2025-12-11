@@ -111,6 +111,41 @@ const getPublicProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const exploreTravelers = catchAsync(async (req: Request, res: Response) => {
+  const filters = pick(req.query, [
+    "searchTerm",
+    "travelInterest",
+    "currentLocation",
+    "hasVerifiedBadge",
+  ]);
+  const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+
+  const result = await userService.exploreTravelers(filters, options);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Travelers retrieved successfully!",
+    meta: result.meta,
+    data: result.data,
+  });
+});
+
+const getDashboardStats = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const user = req.user;
+    console.log("sadsadasdasdas");
+    const result = await userService.getDashboardStats(user as IAuthUser);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Dashboard stats retrieved successfully!",
+      data: result,
+    });
+  }
+);
+
 export const userController = {
   createAdmin,
   getAllUsers,
@@ -120,4 +155,6 @@ export const userController = {
   getMyProfile,
   updateMyProfile,
   getPublicProfile,
+  exploreTravelers,
+  getDashboardStats,
 };

@@ -234,8 +234,12 @@ const updateTravelPlan = async (
   id: string,
   payload: Partial<ICreateTravelPlanPayload>
 ) => {
+  const isAdmin = user?.role === "ADMIN";
+
   const travelPlan = await prisma.travelPlan.findFirst({
-    where: { id, creatorId: user?.id, isDeleted: false },
+    where: isAdmin
+      ? { id, isDeleted: false }
+      : { id, creatorId: user?.id, isDeleted: false },
   });
 
   if (!travelPlan) {
@@ -256,8 +260,12 @@ const updateTravelPlan = async (
 };
 
 const deleteTravelPlan = async (user: IAuthUser, id: string) => {
+  const isAdmin = user?.role === "ADMIN";
+
   const travelPlan = await prisma.travelPlan.findFirst({
-    where: { id, creatorId: user?.id, isDeleted: false },
+    where: isAdmin
+      ? { id, isDeleted: false }
+      : { id, creatorId: user?.id, isDeleted: false },
   });
 
   if (!travelPlan) {
@@ -277,8 +285,12 @@ const updateTravelPlanStatus = async (
   id: string,
   status: TravelPlanStatus
 ) => {
+  const isAdmin = user?.role === "ADMIN";
+
   const travelPlan = await prisma.travelPlan.findFirst({
-    where: { id, creatorId: user?.id, isDeleted: false },
+    where: isAdmin
+      ? { id, isDeleted: false }
+      : { id, creatorId: user?.id, isDeleted: false },
   });
 
   if (!travelPlan) {
@@ -453,6 +465,72 @@ const respondToTravelRequest = async (
   return result;
 };
 
+// Admin: Get all travel plans (including deleted)
+const adminGetAllTravelPlans = async (
+  params: {
+    searchTerm?: string;
+    destination?: string;
+    travelType?: string;
+    status?: string;
+    isDeleted?: string;
+  },
+  options: IPaginationOptions
+) => {
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(options);
+
+  const andConditions: Prisma.TravelPlanWhereInput[] = [];
+
+  if (params.searchTerm) {
+    andConditions.push({
+      OR: travelPlanSearchableFields.map((field) => ({
+        [field]: { contains: params.searchTerm, mode: "insensitive" },
+      })),
+    });
+  }
+
+  if (params.destination) {
+    andConditions.push({
+      destination: { contains: params.destination, mode: "insensitive" },
+    });
+  }
+
+  if (params.travelType) {
+    andConditions.push({ travelType: params.travelType as any });
+  }
+
+  if (params.status) {
+    andConditions.push({ status: params.status as any });
+  }
+
+  if (params.isDeleted === "true") {
+    andConditions.push({ isDeleted: true });
+  } else if (params.isDeleted === "false") {
+    andConditions.push({ isDeleted: false });
+  }
+
+  const whereConditions: Prisma.TravelPlanWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
+  const result = await prisma.travelPlan.findMany({
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy: { [sortBy]: sortOrder },
+    select: {
+      ...travelPlanSelectFields,
+      isDeleted: true,
+      _count: {
+        select: { travelRequests: true },
+      },
+    },
+  });
+
+  const total = await prisma.travelPlan.count({ where: whereConditions });
+
+  return { meta: { page, limit, total }, data: result };
+};
+
 export const TravelPlanService = {
   createTravelPlan,
   getAllTravelPlans,
@@ -466,4 +544,5 @@ export const TravelPlanService = {
   getMyTravelRequests,
   getPendingRequestsForMyPlans,
   respondToTravelRequest,
+  adminGetAllTravelPlans,
 };

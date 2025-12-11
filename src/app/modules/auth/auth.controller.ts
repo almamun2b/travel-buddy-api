@@ -23,7 +23,7 @@ const parseExpiryToMs = (expiry: string): number => {
 };
 
 const getCookieOptions = (maxAge: number) => ({
-  secure: env.nodeEnv === "production",
+  secure: true,
   httpOnly: true,
   sameSite: "none" as const,
   maxAge,
@@ -88,9 +88,7 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "Logged in successfully!",
-    data: {
-      needPasswordChange: result.needPasswordChange,
-    },
+    data: result.user,
   });
 });
 

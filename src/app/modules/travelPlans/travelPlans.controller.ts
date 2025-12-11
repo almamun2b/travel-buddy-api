@@ -211,6 +211,33 @@ const respondToTravelRequest = catchAsync(
   }
 );
 
+// Admin: Get all travel plans
+const adminGetAllTravelPlans = catchAsync(
+  async (req: Request, res: Response) => {
+    const filters = pick(req.query, [
+      "searchTerm",
+      "destination",
+      "travelType",
+      "status",
+      "isDeleted",
+    ]);
+    const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+
+    const result = await TravelPlanService.adminGetAllTravelPlans(
+      filters,
+      options
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Travel plans retrieved successfully!",
+      meta: result.meta,
+      data: result.data,
+    });
+  }
+);
+
 export const TravelPlanController = {
   createTravelPlan,
   getAllTravelPlans,
@@ -224,4 +251,5 @@ export const TravelPlanController = {
   getMyTravelRequests,
   getPendingRequestsForMyPlans,
   respondToTravelRequest,
+  adminGetAllTravelPlans,
 };

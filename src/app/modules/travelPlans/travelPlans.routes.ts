@@ -51,6 +51,12 @@ router.get(
   TravelPlanController.matchTravelPlans
 );
 
+router.get(
+  "/admin/all",
+  auth(UserRole.ADMIN),
+  TravelPlanController.adminGetAllTravelPlans
+);
+
 router.patch(
   "/:id",
   auth(UserRole.USER, UserRole.ADMIN),

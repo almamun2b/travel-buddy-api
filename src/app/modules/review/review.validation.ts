@@ -14,7 +14,21 @@ const createReview = z.object({
     .max(1000, "Comment must not exceed 1000 characters"),
 });
 
+const updateReview = z.object({
+  rating: z
+    .number()
+    .int()
+    .min(1, "Rating must be at least 1")
+    .max(5, "Rating must not exceed 5")
+    .optional(),
+  comment: z
+    .string()
+    .min(10, "Comment must be at least 10 characters")
+    .max(1000, "Comment must not exceed 1000 characters")
+    .optional(),
+});
+
 export const ReviewValidation = {
   createReview,
+  updateReview,
 };
-
