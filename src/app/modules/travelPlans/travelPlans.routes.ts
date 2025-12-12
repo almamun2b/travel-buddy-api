@@ -46,7 +46,7 @@ router.get(
 );
 
 router.get(
-  "/match/travelers",
+  "/match",
   auth(UserRole.USER, UserRole.ADMIN),
   TravelPlanController.matchTravelPlans
 );
