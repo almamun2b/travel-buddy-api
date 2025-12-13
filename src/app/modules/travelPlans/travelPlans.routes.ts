@@ -11,8 +11,6 @@ const router = express.Router();
 //  Public Routes
 router.get("/", TravelPlanController.getAllTravelPlans);
 
-router.get("/:id", TravelPlanController.getTravelPlanById);
-
 //  Authenticated User Routes
 router.post(
   "/",
@@ -57,6 +55,36 @@ router.get(
   TravelPlanController.adminGetAllTravelPlans
 );
 
+router.post(
+  "/requests/send",
+  auth(UserRole.USER, UserRole.ADMIN),
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body = TravelPlanValidation.sendTravelRequest.parse(req.body);
+    return TravelPlanController.sendTravelRequest(req, res, next);
+  }
+);
+
+router.get(
+  "/requests/my",
+  auth(UserRole.USER, UserRole.ADMIN),
+  TravelPlanController.getMyTravelRequests
+);
+
+router.get(
+  "/requests/pending",
+  auth(UserRole.USER, UserRole.ADMIN),
+  TravelPlanController.getPendingRequestsForMyPlans
+);
+
+router.get("/:id", TravelPlanController.getTravelPlanById);
+
+router.patch(
+  "/requests/:requestId/respond",
+  auth(UserRole.USER, UserRole.ADMIN),
+  validateRequest(TravelPlanValidation.respondToTravelRequest),
+  TravelPlanController.respondToTravelRequest
+);
+
 router.patch(
   "/:id",
   auth(UserRole.USER, UserRole.ADMIN),
@@ -93,34 +121,6 @@ router.delete(
   "/:id",
   auth(UserRole.USER, UserRole.ADMIN),
   TravelPlanController.deleteTravelPlan
-);
-
-router.post(
-  "/requests/send",
-  auth(UserRole.USER, UserRole.ADMIN),
-  (req: Request, res: Response, next: NextFunction) => {
-    req.body = TravelPlanValidation.sendTravelRequest.parse(req.body);
-    return TravelPlanController.sendTravelRequest(req, res, next);
-  }
-);
-
-router.get(
-  "/requests/my",
-  auth(UserRole.USER, UserRole.ADMIN),
-  TravelPlanController.getMyTravelRequests
-);
-
-router.get(
-  "/requests/pending",
-  auth(UserRole.USER, UserRole.ADMIN),
-  TravelPlanController.getPendingRequestsForMyPlans
-);
-
-router.patch(
-  "/requests/:requestId/respond",
-  auth(UserRole.USER, UserRole.ADMIN),
-  validateRequest(TravelPlanValidation.respondToTravelRequest),
-  TravelPlanController.respondToTravelRequest
 );
 
 export const travelPlanRoutes = router;

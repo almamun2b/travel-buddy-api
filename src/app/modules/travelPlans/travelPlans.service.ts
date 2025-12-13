@@ -316,6 +316,7 @@ const matchTravelPlans = async (
     where: { id: user?.id },
     select: { travelInterests: true, currentLocation: true },
   });
+  console.log(userData, "mamun");
 
   const andConditions: Prisma.TravelPlanWhereInput[] = [
     { isDeleted: false },

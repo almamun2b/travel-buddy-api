@@ -21,14 +21,14 @@ const prisma = new PrismaClient({
   ],
 });
 
-prisma.$on("query", (e) => {
-  console.log("-------------------------------------------");
-  console.log("Query: " + e.query);
-  console.log("-------------------------------------------");
-  console.log("Params: " + e.params);
-  console.log("-------------------------------------------");
-  console.log("Duration: " + e.duration + "ms");
-  console.log("-------------------------------------------");
-});
+// prisma.$on("query", (e) => {
+//   console.log("-------------------------------------------");
+//   console.log("Query: " + e.query);
+//   console.log("-------------------------------------------");
+//   console.log("Params: " + e.params);
+//   console.log("-------------------------------------------");
+//   console.log("Duration: " + e.duration + "ms");
+//   console.log("-------------------------------------------");
+// });
 
 export default prisma;

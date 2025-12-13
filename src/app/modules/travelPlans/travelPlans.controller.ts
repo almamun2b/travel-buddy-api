@@ -127,6 +127,7 @@ const updateTravelPlanStatus = catchAsync(
 const matchTravelPlans = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
     const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    console.log("mamun");
     const result = await TravelPlanService.matchTravelPlans(
       req.user as IAuthUser,
       options

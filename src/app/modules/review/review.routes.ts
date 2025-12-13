@@ -28,6 +28,9 @@ router.get(
   ReviewController.getReviewsGivenByMe
 );
 
+// Public Routes
+router.get("/user/:userId", ReviewController.getReviewsForUser);
+
 router.patch(
   "/:id",
   auth(UserRole.USER, UserRole.ADMIN),
@@ -42,8 +45,5 @@ router.delete(
   auth(UserRole.USER, UserRole.ADMIN),
   ReviewController.deleteReview
 );
-
-// Public Routes
-router.get("/user/:userId", ReviewController.getReviewsForUser);
 
 export const reviewRoutes = router;

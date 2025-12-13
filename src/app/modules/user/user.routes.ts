@@ -43,17 +43,6 @@ router.post(
   }
 );
 
-// Update user status (Admin only)
-router.patch(
-  "/:id/status",
-  auth(UserRole.ADMIN),
-  validateRequest(userValidation.updateStatus),
-  userController.changeUserStatus
-);
-
-// Soft delete user (Admin only)
-router.delete("/:id", auth(UserRole.ADMIN), userController.softDeleteUser);
-
 // Update my profile
 router.patch(
   "/profile/update",
@@ -66,5 +55,16 @@ router.patch(
     return userController.updateMyProfile(req, res, next);
   }
 );
+
+// Update user status (Admin only)
+router.patch(
+  "/:id/status",
+  auth(UserRole.ADMIN),
+  validateRequest(userValidation.updateStatus),
+  userController.changeUserStatus
+);
+
+// Soft delete user (Admin only)
+router.delete("/:id", auth(UserRole.ADMIN), userController.softDeleteUser);
 
 export const userRoutes = router;
