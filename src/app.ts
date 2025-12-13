@@ -5,7 +5,6 @@ import httpStatus from "http-status";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import { PaymentController } from "./app/modules/payment/payment.controller";
 import router from "./app/routes";
-import { env } from "./config/env";
 
 const app: Application = express();
 app.use(cookieParser());
@@ -20,7 +19,7 @@ app.post(
 // CORS Configuration
 app.use(
   cors({
-    origin: env.clientUrl || "http://localhost:3000",
+    origin: "https://travel-buddy-mamun.vercel.app",
     credentials: true,
   })
 );
