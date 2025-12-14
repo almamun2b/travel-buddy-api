@@ -19,7 +19,7 @@ app.post(
 // CORS Configuration
 app.use(
   cors({
-    origin: "https://travel-buddy-mamun.vercel.app",
+    origin: ["https://travel-buddy-mamun.vercel.app", "http://localhost:3000"],
     credentials: true,
   })
 );
