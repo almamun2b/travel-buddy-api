@@ -22,11 +22,14 @@ const parseExpiryToMs = (expiry: string): number => {
   return multipliers[unit] ? value * multipliers[unit] : 1000 * 60 * 60; // default 1 hour
 };
 
+const isProduction = env.nodeEnv === "production";
+
 const getCookieOptions = (maxAge: number) => ({
   secure: true,
-  httpOnly: true,
-  sameSite: "none" as const,
+  httpOnly: isProduction,
+  sameSite: isProduction ? ("none" as const) : ("lax" as const),
   maxAge,
+  path: "/",
 });
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {

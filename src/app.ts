@@ -7,6 +7,9 @@ import { PaymentController } from "./app/modules/payment/payment.controller";
 import router from "./app/routes";
 
 const app: Application = express();
+
+app.set("trust proxy", 1);
+
 app.use(cookieParser());
 
 // Stripe webhook
