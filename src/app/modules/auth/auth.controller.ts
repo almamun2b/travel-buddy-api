@@ -91,7 +91,10 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "Logged in successfully!",
-    data: result.user,
+    data: {
+      accessToken,
+      refreshToken,
+    },
   });
 });
 
@@ -118,7 +121,10 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "Access token generated successfully!",
-    data: null,
+    data: {
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    },
   });
 });
 
