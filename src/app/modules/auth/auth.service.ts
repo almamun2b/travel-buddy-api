@@ -115,7 +115,7 @@ const registerUser = async (payload: IRegisterPayload) => {
     `,
   });
 
-  return newUser;
+  return { ...newUser, verificationCode };
 };
 
 const verifyEmail = async (payload: { email: string; code: string }) => {
