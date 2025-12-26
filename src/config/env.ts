@@ -40,6 +40,10 @@ interface Env {
     email: string;
     appPass: string;
   };
+  bravo: {
+    apiKey: string;
+    email: string;
+  };
 }
 
 dotenv.config();
@@ -92,6 +96,10 @@ const env: Env = {
   emailSender: {
     email: getEnvVar("EMAIL_SENDER_EMAIL"),
     appPass: getEnvVar("EMAIL_SENDER_APP_PASS"),
+  },
+  bravo: {
+    apiKey: getEnvVar("BREVO_API_KEY"),
+    email: getEnvVar("BREVO_SENDER_EMAIL"),
   },
 };
 
