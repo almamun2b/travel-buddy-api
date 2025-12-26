@@ -94,6 +94,7 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     data: {
       accessToken,
       refreshToken,
+      testMessage: "This is test message",
     },
   });
 });

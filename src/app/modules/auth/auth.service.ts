@@ -281,7 +281,6 @@ const loginUser = async (payload: { email: string; password: string }) => {
     accessToken,
     refreshToken,
     user,
-    testMessage: "This is test message",
   };
 };
 
