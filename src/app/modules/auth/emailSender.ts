@@ -1,34 +1,27 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { env } from "../../../config/env";
+
+type SendEmailParams = {
+  email: string; // to
+  html: string;
+  subject: string;
+};
+
+const resend = new Resend(env.emailSender.appPass);
 
 const emailSender = async ({
   email,
   html,
   subject,
-}: {
-  email: string;
-  html: string;
-  subject: string;
-}) => {
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: env.emailSender.email,
-      pass: env.emailSender.appPass,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
+}: SendEmailParams) => {
 
-  await transporter.sendMail({
+  return resend.emails.send({
     from: `"Travel Buddy" <${env.emailSender.email}>`,
     to: email,
-    subject: subject,
+    subject,
     html,
   });
+
 };
 
 export default emailSender;

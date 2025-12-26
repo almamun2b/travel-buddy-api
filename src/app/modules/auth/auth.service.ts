@@ -95,7 +95,7 @@ const registerUser = async (payload: IRegisterPayload) => {
 
   console.log(newUser, "newUser");
 
-  await emailSender({
+  const edata = await emailSender({
     email: payload.email,
     subject: "Verify Your Email Address",
     html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -116,6 +116,7 @@ const registerUser = async (payload: IRegisterPayload) => {
     </div>
     `,
   });
+  console.log("Email sent data:", edata);
 
   return { ...newUser, verificationCode };
 };
