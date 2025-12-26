@@ -40,6 +40,12 @@ interface Env {
     email: string;
     appPass: string;
   };
+  sendpulse: {
+    clientId: string;
+    clientSecret: string;
+    fromEmail: string;
+    fromName: string;
+  };
 }
 
 dotenv.config();
@@ -92,6 +98,12 @@ const env: Env = {
   emailSender: {
     email: getEnvVar("EMAIL_SENDER_EMAIL"),
     appPass: getEnvVar("EMAIL_SENDER_APP_PASS"),
+  },
+  sendpulse: {
+    clientId: getEnvVar("SENDPULSE_CLIENT_ID"),
+    clientSecret: getEnvVar("SENDPULSE_CLIENT_SECRET"),
+    fromEmail: getEnvVar("SENDPULSE_FROM_EMAIL"),
+    fromName: getEnvVar("SENDPULSE_FROM_NAME"),
   },
 };
 
