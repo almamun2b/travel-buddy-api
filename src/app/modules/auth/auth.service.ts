@@ -93,6 +93,8 @@ const registerUser = async (payload: IRegisterPayload) => {
     },
   });
 
+  console.log(newUser, "newUser");
+
   await emailSender({
     email: payload.email,
     subject: "Verify Your Email Address",
@@ -279,6 +281,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
     accessToken,
     refreshToken,
     user,
+    testMessage: "This is test message",
   };
 };
 
