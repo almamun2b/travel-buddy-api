@@ -167,6 +167,12 @@ const handleStripeWebhookEvent = async (event: Stripe.Event) => {
           session.subscription as string
         );
 
+        // Get the invoice to capture the actual amount paid
+        const invoice = await stripe.invoices.retrieve(
+          stripeSubscription.latest_invoice as string
+        );
+        const amountPaid = invoice.amount_paid || 0;
+
         const endDate = new Date();
         endDate.setMonth(endDate.getMonth() + 1);
 
@@ -175,6 +181,7 @@ const handleStripeWebhookEvent = async (event: Stripe.Event) => {
           create: {
             userId,
             plan,
+            amountPaid,
             status: SubscriptionStatus.ACTIVE,
             endDate,
             stripeCustomerId: session.customer as string,
@@ -182,6 +189,7 @@ const handleStripeWebhookEvent = async (event: Stripe.Event) => {
           },
           update: {
             plan,
+            amountPaid,
             status: SubscriptionStatus.ACTIVE,
             endDate,
             stripeSubId: stripeSubscription.id,
@@ -245,6 +253,23 @@ const handleStripeWebhookEvent = async (event: Stripe.Event) => {
       break;
     }
 
+    case "invoice.payment_succeeded": {
+      const invoice = event.data.object as Stripe.Invoice & {
+        subscription?: string | null;
+      };
+      const subscriptionId = invoice.subscription;
+      const amountPaid = invoice.amount_paid || 0;
+
+      if (subscriptionId) {
+        // Update the amountPaid to track recurring payments
+        await prisma.subscription.updateMany({
+          where: { stripeSubId: subscriptionId },
+          data: { amountPaid },
+        });
+      }
+      break;
+    }
+
     default:
       console.log(`ℹ️ Unhandled event type: ${event.type}`);
   }
@@ -290,6 +315,12 @@ const confirmSubscription = async (user: IAuthUser, sessionId: string) => {
     session.subscription as string
   );
 
+  // Get the invoice to capture the actual amount paid
+  const invoice = await stripe.invoices.retrieve(
+    stripeSubscription.latest_invoice as string
+  );
+  const amountPaid = invoice.amount_paid || 0;
+
   const endDate = new Date();
   if (plan === SubscriptionPlan.YEARLY) {
     endDate.setFullYear(endDate.getFullYear() + 1);
@@ -302,6 +333,7 @@ const confirmSubscription = async (user: IAuthUser, sessionId: string) => {
     create: {
       userId: user.id,
       plan,
+      amountPaid,
       status: SubscriptionStatus.ACTIVE,
       startDate: new Date(),
       endDate,
@@ -310,6 +342,7 @@ const confirmSubscription = async (user: IAuthUser, sessionId: string) => {
     },
     update: {
       plan,
+      amountPaid,
       status: SubscriptionStatus.ACTIVE,
       startDate: new Date(),
       endDate,

@@ -532,6 +532,39 @@ const adminGetAllTravelPlans = async (
   return { meta: { page, limit, total }, data: result };
 };
 
+const getApprovedRequestsForThisPlan = async (travelPlanId: string) => {
+  const result = await prisma.travelRequest.findMany({
+    where: {
+      travelPlanId,
+      status: "APPROVED",
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      travelPlanId: true,
+      message: true,
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          avatar: true,
+          isVerified: true,
+          travelInterests: true,
+          bio: true,
+          email: true,
+          contactNumber: true,
+          gender: true,
+          dateOfBirth: true,
+          currentLocation: true,
+          visitedCountries: true,
+        },
+      },
+    },
+  });
+
+  return result;
+};
+
 export const TravelPlanService = {
   createTravelPlan,
   getAllTravelPlans,
@@ -546,4 +579,5 @@ export const TravelPlanService = {
   getPendingRequestsForMyPlans,
   respondToTravelRequest,
   adminGetAllTravelPlans,
+  getApprovedRequestsForThisPlan,
 };

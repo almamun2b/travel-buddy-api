@@ -134,7 +134,6 @@ const exploreTravelers = catchAsync(async (req: Request, res: Response) => {
 const getDashboardStats = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
     const user = req.user;
-    console.log("sadsadasdasdas");
     const result = await userService.getDashboardStats(user as IAuthUser);
 
     sendResponse(res, {

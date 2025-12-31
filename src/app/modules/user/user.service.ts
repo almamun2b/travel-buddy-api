@@ -326,8 +326,8 @@ const exploreTravelers = async (
     paginationHelper.calculatePagination(options);
 
   const andConditions: Prisma.UserWhereInput[] = [
-    { role: UserRole.USER },
     { status: UserStatus.ACTIVE },
+    { isVerified: true },
     { isDeleted: false },
   ];
 
@@ -426,12 +426,20 @@ const getDashboardStats = async (user: IAuthUser) => {
       },
     });
 
+    // Calculate total revenues from all subscriptions with amountPaid
+    const totalRevenueResult = await prisma.subscription.aggregate({
+      _sum: { amountPaid: true },
+    });
+
+    const totalRevenues = (totalRevenueResult._sum.amountPaid || 0) / 100; // Convert from cents to dollars
+
     return {
       stats: {
         totalUsers,
         totalTravelPlans,
         totalReviews,
         activeSubscriptions,
+        totalRevenues,
       },
       recentUsers,
       recentTravelPlans,

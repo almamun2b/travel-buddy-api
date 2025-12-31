@@ -76,6 +76,12 @@ router.get(
   TravelPlanController.getPendingRequestsForMyPlans
 );
 
+router.get(
+  "/requests/approved",
+  auth(UserRole.USER, UserRole.ADMIN),
+  TravelPlanController.getApprovedRequestsForThisPlan
+);
+
 router.get("/:id", TravelPlanController.getTravelPlanById);
 
 router.patch(

@@ -239,6 +239,21 @@ const adminGetAllTravelPlans = catchAsync(
   }
 );
 
+const getApprovedRequestsForThisPlan = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const { travelPlanId } = req.params;
+    const result = await TravelPlanService.getApprovedRequestsForThisPlan(
+      travelPlanId
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Approved requests retrieved successfully!",
+      data: result,
+    });
+  }
+);
+
 export const TravelPlanController = {
   createTravelPlan,
   getAllTravelPlans,
@@ -253,4 +268,5 @@ export const TravelPlanController = {
   getPendingRequestsForMyPlans,
   respondToTravelRequest,
   adminGetAllTravelPlans,
+  getApprovedRequestsForThisPlan,
 };

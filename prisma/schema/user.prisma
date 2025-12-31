@@ -54,6 +54,7 @@ model Subscription {
   id               String             @id @default(uuid())
   userId           String             @unique
   plan             SubscriptionPlan
+  amountPaid       Int? // Amount in cents
   status           SubscriptionStatus @default(ACTIVE)
   startDate        DateTime           @default(now())
   endDate          DateTime
