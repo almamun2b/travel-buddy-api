@@ -392,18 +392,28 @@ const getDashboardStats = async (user: IAuthUser) => {
 
   if (user.role === "ADMIN") {
     // Admin dashboard stats
-    const [totalUsers, totalTravelPlans, totalReviews, activeSubscriptions] =
-      await Promise.all([
-        prisma.user.count({ where: { isDeleted: false, role: UserRole.USER } }),
-        prisma.travelPlan.count({ where: { isDeleted: false } }),
-        prisma.review.count(),
-        prisma.subscription.count({
-          where: {
-            status: "ACTIVE",
-            plan: { in: ["MONTHLY", "YEARLY"] },
-          },
-        }),
-      ]);
+    const [
+      totalUsers,
+      verifiedUsers,
+      totalAdmins,
+      totalTravelPlans,
+      totalReviews,
+      activeSubscriptions,
+    ] = await Promise.all([
+      prisma.user.count({ where: { isDeleted: false, role: UserRole.USER } }),
+      prisma.user.count({
+        where: { isDeleted: false, role: UserRole.USER, isVerified: true },
+      }),
+      prisma.user.count({ where: { isDeleted: false, role: UserRole.ADMIN } }),
+      prisma.travelPlan.count({ where: { isDeleted: false } }),
+      prisma.review.count(),
+      prisma.subscription.count({
+        where: {
+          status: "ACTIVE",
+          plan: { in: ["MONTHLY", "YEARLY"] },
+        },
+      }),
+    ]);
 
     const recentUsers = await prisma.user.findMany({
       where: { isDeleted: false, role: UserRole.USER },
@@ -436,6 +446,8 @@ const getDashboardStats = async (user: IAuthUser) => {
     return {
       stats: {
         totalUsers,
+        verifiedUsers,
+        totalAdmins,
         totalTravelPlans,
         totalReviews,
         activeSubscriptions,
