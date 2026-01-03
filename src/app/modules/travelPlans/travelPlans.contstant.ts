@@ -12,4 +12,5 @@ export const travelPlanFilterableFields = [
   "maxBudget",
   "startDate",
   "endDate",
+  "destination",
 ];

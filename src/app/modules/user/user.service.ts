@@ -310,7 +310,12 @@ const getPublicProfile = async (id: string) => {
       status: UserStatus.ACTIVE,
       isDeleted: false,
     },
-    select: publicProfileFields,
+    select: {
+      ...publicProfileFields,
+      _count: {
+        select: { reviewsReceived: true, travelPlans: true },
+      },
+    },
   });
 
   if (!user) {
