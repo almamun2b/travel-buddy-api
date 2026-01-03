@@ -104,6 +104,13 @@ const getAllUsers = async (params: any, options: IPaginationOptions) => {
   }
 
   if (Object.keys(filterData).length > 0) {
+    if (filterData?.isVerified) {
+      filterData.isVerified = filterData.isVerified === "true";
+    }
+
+    if (filterData?.hasVerifiedBadge) {
+      filterData.hasVerifiedBadge = filterData.hasVerifiedBadge === "true";
+    }
     andConditions.push({
       AND: Object.keys(filterData).map((key) => ({
         [key]: {
