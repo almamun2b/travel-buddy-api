@@ -347,12 +347,14 @@ const matchTravelPlans = async (
 
 const sendTravelRequest = async (
   user: IAuthUser,
-  travelPlanId: string,
-  message?: string
+  body: {
+    travelPlanId: string;
+    message?: string;
+  }
 ) => {
   const travelPlan = await prisma.travelPlan.findFirst({
     where: {
-      id: travelPlanId,
+      id: body.travelPlanId,
       isDeleted: false,
       status: TravelPlanStatus.OPEN,
     },
@@ -378,7 +380,10 @@ const sendTravelRequest = async (
 
   const existingRequest = await prisma.travelRequest.findUnique({
     where: {
-      travelPlanId_userId: { travelPlanId, userId: user?.id as string },
+      travelPlanId_userId: {
+        travelPlanId: body.travelPlanId,
+        userId: user?.id as string,
+      },
     },
   });
 
@@ -391,9 +396,9 @@ const sendTravelRequest = async (
 
   const result = await prisma.travelRequest.create({
     data: {
-      travelPlanId,
+      travelPlanId: body.travelPlanId,
       userId: user?.id as string,
-      message,
+      message: body.message || "",
     },
   });
 

@@ -145,13 +145,14 @@ const matchTravelPlans = catchAsync(
 
 const sendTravelRequest = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
-    const { travelPlanId, message } = req.body;
+    console.log(req.body, "req.body");
 
     const result = await TravelPlanService.sendTravelRequest(
       req.user as IAuthUser,
-      travelPlanId,
-      message
+      req.body
     );
+
+    console.log(result, "result");
 
     sendResponse(res, {
       statusCode: httpStatus.CREATED,
