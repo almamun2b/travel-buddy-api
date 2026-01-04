@@ -73,7 +73,7 @@ const sendTravelRequest = z.object({
 });
 
 const respondToTravelRequest = z.object({
-  status: z.enum(["APPROVED", "REJECTED"], {
+  status: z.enum(["PENDING", "APPROVED", "REJECTED"], {
     error: "Status is required",
   }),
 });

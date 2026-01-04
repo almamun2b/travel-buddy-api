@@ -158,7 +158,12 @@ const getAllTravelPlans = async (params: any, options: IPaginationOptions) => {
       options.sortBy && options.sortOrder
         ? { [options.sortBy]: options.sortOrder }
         : { createdAt: "desc" },
-    select: travelPlanSelectFields,
+    select: {
+      ...travelPlanSelectFields,
+      _count: {
+        select: { travelRequests: true },
+      },
+    },
   });
 
   const total = await prisma.travelPlan.count({ where: whereConditions });
@@ -171,9 +176,10 @@ const getAllTravelPlans = async (params: any, options: IPaginationOptions) => {
 
 const getTravelPlanById = async (id: string) => {
   const travelPlan = await prisma.travelPlan.findFirst({
-    where: { id, isDeleted: false },
+    where: { id },
     select: {
       ...travelPlanSelectFields,
+      isDeleted: true,
       travelRequests: {
         where: { status: "APPROVED" },
         select: {

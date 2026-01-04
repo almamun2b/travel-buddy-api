@@ -77,7 +77,7 @@ router.get(
 );
 
 router.get(
-  "/requests/approved",
+  "/requests/approved/:travelPlanId",
   auth(UserRole.USER, UserRole.ADMIN),
   TravelPlanController.getApprovedRequestsForThisPlan
 );
