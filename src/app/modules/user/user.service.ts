@@ -156,6 +156,9 @@ const getUserById = async (id: string) => {
     },
     select: {
       ...userSelectFields,
+      _count: {
+        select: { reviewsReceived: true, travelPlans: true },
+      },
       subscription: {
         select: {
           id: true,
@@ -172,7 +175,39 @@ const getUserById = async (id: string) => {
     throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
   }
 
-  return user;
+  const avgRating = await prisma.review.aggregate({
+    where: { revieweeId: user.id },
+    _avg: { rating: true },
+  });
+
+  return { ...user, avgRating: avgRating._avg.rating || 0 };
+};
+
+const getPublicProfile = async (id: string) => {
+  const user = await prisma.user.findFirst({
+    where: {
+      id,
+      status: UserStatus.ACTIVE,
+      isDeleted: false,
+    },
+    select: {
+      ...publicProfileFields,
+      _count: {
+        select: { reviewsReceived: true, travelPlans: true },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
+  }
+
+  const avgRating = await prisma.review.aggregate({
+    where: { revieweeId: user.id },
+    _avg: { rating: true },
+  });
+
+  return { ...user, avgRating: avgRating._avg.rating || 0 };
 };
 
 const changeUserStatus = async (
@@ -222,6 +257,24 @@ const softDeleteUser = async (id: string) => {
       status: UserStatus.DELETED,
     },
     select: userSelectFields,
+  });
+
+  return result;
+};
+
+const deleteUser = async (id: string) => {
+  const user = await prisma.user.findFirst({
+    where: {
+      id,
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
+  }
+
+  const result = await prisma.user.delete({
+    where: { id },
   });
 
   return result;
@@ -303,28 +356,6 @@ const updateMyProfile = async (user: IAuthUser, req: Request) => {
   return result;
 };
 
-const getPublicProfile = async (id: string) => {
-  const user = await prisma.user.findFirst({
-    where: {
-      id,
-      status: UserStatus.ACTIVE,
-      isDeleted: false,
-    },
-    select: {
-      ...publicProfileFields,
-      _count: {
-        select: { reviewsReceived: true, travelPlans: true },
-      },
-    },
-  });
-
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
-  }
-
-  return user;
-};
-
 const exploreTravelers = async (
   params: {
     searchTerm?: string;
@@ -389,11 +420,25 @@ const exploreTravelers = async (
     },
   });
 
+  const usersWithAvgRating = await Promise.all(
+    result.map(async (user) => {
+      const avgRating = await prisma.review.aggregate({
+        where: { revieweeId: user.id },
+        _avg: { rating: true },
+      });
+
+      return {
+        ...user,
+        avgRating: avgRating._avg.rating || 0,
+      };
+    })
+  );
+
   const total = await prisma.user.count({ where: whereConditions });
 
   return {
     meta: { page, limit, total },
-    data: result,
+    data: usersWithAvgRating,
   };
 };
 
@@ -564,4 +609,5 @@ export const userService = {
   getPublicProfile,
   exploreTravelers,
   getDashboardStats,
+  deleteUser,
 };

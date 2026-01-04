@@ -56,6 +56,9 @@ router.patch(
   }
 );
 
+// Soft delete user (Admin only)
+router.delete("/soft/:id", auth(UserRole.ADMIN), userController.softDeleteUser);
+
 // Update user status (Admin only)
 router.patch(
   "/:id/status",
@@ -64,7 +67,7 @@ router.patch(
   userController.changeUserStatus
 );
 
-// Soft delete user (Admin only)
-router.delete("/:id", auth(UserRole.ADMIN), userController.softDeleteUser);
+// Delete user (Admin only)
+router.delete("/:id", auth(UserRole.ADMIN), userController.deleteUser);
 
 export const userRoutes = router;

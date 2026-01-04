@@ -69,6 +69,18 @@ const softDeleteUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const deleteUser = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await userService.deleteUser(id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "User deleted successfully!",
+    data: result,
+  });
+});
+
 // User Profile Operations
 const getMyProfile = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
@@ -151,6 +163,7 @@ export const userController = {
   getUserById,
   changeUserStatus,
   softDeleteUser,
+  deleteUser,
   getMyProfile,
   updateMyProfile,
   getPublicProfile,
