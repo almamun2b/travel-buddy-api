@@ -213,6 +213,97 @@ const updateReview = async (
   return result;
 };
 
+const getToReviewPlans = async (user: IAuthUser) => {
+  if (!user?.id) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated!");
+  }
+
+  // Find all completed travel plans where the user participated (but not as creator)
+  const participatedPlans = await prisma.travelPlan.findMany({
+    where: {
+      status: "COMPLETED",
+      isDeleted: false,
+      creatorId: { not: user.id }, // Exclude user's own plans
+      travelRequests: {
+        some: {
+          userId: user.id,
+          status: "APPROVED",
+        },
+      },
+    },
+    include: {
+      creator: {
+        select: { id: true, fullName: true, avatar: true },
+      },
+      travelRequests: {
+        where: { status: "APPROVED" },
+        include: {
+          user: {
+            select: { id: true, fullName: true, avatar: true },
+          },
+        },
+      },
+      reviews: {
+        where: { reviewerId: user.id },
+        select: { revieweeId: true },
+      },
+    },
+  });
+
+  // Filter plans where user can still give reviews
+  const plansToReview = participatedPlans
+    .map((plan) => {
+      // Get all participants (creator + approved requesters)
+      const allParticipants = [
+        {
+          id: plan.creator.id,
+          fullName: plan.creator.fullName,
+          avatar: plan.creator.avatar,
+        },
+        ...plan.travelRequests.map((req) => ({
+          id: req.user.id,
+          fullName: req.user.fullName,
+          avatar: req.user.avatar,
+        })),
+      ];
+
+      // Get users already reviewed by current user
+      const reviewedUserIds = plan.reviews.map((review) => review.revieweeId);
+
+      // Find participants that user can still review (not themselves and not already reviewed)
+      const availableToReview = allParticipants.filter(
+        (participant) =>
+          participant.id !== user.id &&
+          !reviewedUserIds.includes(participant.id)
+      );
+
+      // Only return plan if there are participants to review
+      if (availableToReview.length === 0) {
+        return null;
+      }
+
+      return {
+        travelPlanId: plan.id,
+        creatorId: plan.creator.id,
+        title: plan.title,
+        description: plan.description,
+        destination: plan.destination,
+        startDate: plan.startDate,
+        endDate: plan.endDate,
+        budget: plan.budget,
+        travelType: plan.travelType,
+        maxMembers: plan.maxMembers,
+        activities: plan.activities,
+        images: plan.images,
+        createdAt: plan.createdAt,
+        updatedAt: plan.updatedAt,
+      };
+    })
+    .filter(Boolean); // Remove null entries
+
+  return plansToReview;
+};
+
 const deleteReview = async (user: IAuthUser, reviewId: string) => {
   if (!user?.id) {
     throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated!");
@@ -248,4 +339,5 @@ export const ReviewService = {
   getReviewsGivenByMe,
   updateReview,
   deleteReview,
+  getToReviewPlans,
 };

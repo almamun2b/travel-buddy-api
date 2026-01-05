@@ -16,6 +16,7 @@ router.post(
   }
 );
 
+// done
 router.get(
   "/my",
   auth(UserRole.USER, UserRole.ADMIN),
@@ -27,8 +28,13 @@ router.get(
   auth(UserRole.USER, UserRole.ADMIN),
   ReviewController.getReviewsGivenByMe
 );
+router.get(
+  "/to-review-plans",
+  auth(UserRole.USER, UserRole.ADMIN),
+  ReviewController.getToReviewPlans
+);
 
-// Public Routes
+// Public Routes //done
 router.get("/user/:userId", ReviewController.getReviewsForUser);
 
 router.patch(
