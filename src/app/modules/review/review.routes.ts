@@ -1,6 +1,7 @@
 import { UserRole } from "@prisma/client";
-import express, { NextFunction, Request, Response } from "express";
+import express from "express";
 import auth from "../../middlewares/auth";
+import validateRequest from "../../middlewares/validateRequest";
 import { ReviewController } from "./review.controller";
 import { ReviewValidation } from "./review.validation";
 
@@ -10,10 +11,8 @@ const router = express.Router();
 router.post(
   "/",
   auth(UserRole.USER, UserRole.ADMIN),
-  (req: Request, res: Response, next: NextFunction) => {
-    req.body = ReviewValidation.createReview.parse(req.body);
-    return ReviewController.createReview(req, res, next);
-  }
+  validateRequest(ReviewValidation.createReview),
+  ReviewController.createReview
 );
 
 // done
@@ -40,10 +39,8 @@ router.get("/user/:userId", ReviewController.getReviewsForUser);
 router.patch(
   "/:id",
   auth(UserRole.USER, UserRole.ADMIN),
-  (req: Request, res: Response, next: NextFunction) => {
-    req.body = ReviewValidation.updateReview.parse(req.body);
-    return ReviewController.updateReview(req, res, next);
-  }
+  validateRequest(ReviewValidation.updateReview),
+  ReviewController.updateReview
 );
 
 router.delete(
