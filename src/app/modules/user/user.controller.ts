@@ -157,6 +157,17 @@ const getDashboardStats = catchAsync(
   }
 );
 
+const getTopTravelers = catchAsync(async (req: Request, res: Response) => {
+  const result = await userService.getTopTravelers();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Top travelers retrieved successfully!",
+    data: result,
+  });
+});
+
 export const userController = {
   createAdmin,
   getAllUsers,
@@ -169,4 +180,5 @@ export const userController = {
   getPublicProfile,
   exploreTravelers,
   getDashboardStats,
+  getTopTravelers,
 };

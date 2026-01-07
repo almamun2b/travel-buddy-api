@@ -24,6 +24,8 @@ router.get(
 
 router.get("/explore/travelers", userController.exploreTravelers);
 
+router.get("/top-travelers", userController.getTopTravelers);
+
 router.get("/profile/:id", userController.getPublicProfile);
 
 router.get("/:id", auth(UserRole.ADMIN), userController.getUserById);

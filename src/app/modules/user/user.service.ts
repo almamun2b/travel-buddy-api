@@ -598,6 +598,98 @@ const getDashboardStats = async (user: IAuthUser) => {
   }
 };
 
+const getTopTravelers = async () => {
+  const topTravelers = await prisma.user.findMany({
+    where: {
+      status: UserStatus.ACTIVE,
+      isDeleted: false,
+      isVerified: true,
+    },
+    select: {
+      id: true,
+      fullName: true,
+      avatar: true,
+      currentLocation: true,
+      travelInterests: true,
+      _count: {
+        select: {
+          reviewsReceived: true,
+          travelPlans: true,
+        },
+      },
+      travelPlans: {
+        where: {
+          startDate: { gte: new Date() },
+          status: "OPEN",
+        },
+        orderBy: { startDate: "asc" },
+        take: 1,
+        select: {
+          destination: true,
+          startDate: true,
+        },
+      },
+    },
+  });
+
+  const usersWithAvgRating = await Promise.all(
+    topTravelers.map(async (user) => {
+      const avgRating = await prisma.review.aggregate({
+        where: { revieweeId: user.id },
+        _avg: { rating: true },
+        _count: { rating: true },
+      });
+
+      const nextTrip = user.travelPlans[0];
+      const nextTripText = nextTrip
+        ? `${nextTrip.destination}, ${nextTrip.startDate.toLocaleDateString(
+            "en-US",
+            { month: "long", year: "numeric" }
+          )}`
+        : null;
+
+      return {
+        id: user.id,
+        fullName: user.fullName,
+        avatar: user.avatar,
+        location: user.currentLocation,
+        avgRating: avgRating._avg.rating?.toFixed(2) || 0,
+        totalReviews: avgRating._count.rating || 0,
+        travelInterests: user.travelInterests.slice(0, 2),
+        nextTrip: nextTripText,
+      };
+    })
+  );
+
+  const sortedTravelers = usersWithAvgRating
+    .filter((user) => user.totalReviews > 0)
+    .sort((a, b) => {
+      const aRating =
+        typeof a.avgRating === "string" ? parseFloat(a.avgRating) : a.avgRating;
+      const bRating =
+        typeof b.avgRating === "string" ? parseFloat(b.avgRating) : b.avgRating;
+
+      if (bRating !== aRating) {
+        return bRating - aRating;
+      }
+      return b.totalReviews - a.totalReviews;
+    })
+    .slice(0, 6);
+
+  if (sortedTravelers.length < 6) {
+    const unratedUsers = usersWithAvgRating.filter(
+      (user) => user.totalReviews === 0
+    );
+    const mostTraveled = unratedUsers
+      .sort((a, b) => b.totalReviews - a.totalReviews)
+      .slice(0, 6 - sortedTravelers.length);
+
+    sortedTravelers.push(...mostTraveled);
+  }
+
+  return sortedTravelers.slice(0, 6);
+};
+
 export const userService = {
   createAdmin,
   getAllUsers,
@@ -609,5 +701,6 @@ export const userService = {
   getPublicProfile,
   exploreTravelers,
   getDashboardStats,
+  getTopTravelers,
   deleteUser,
 };
