@@ -5,10 +5,8 @@ import { PaymentController } from "./payment.controller";
 
 const router = express.Router();
 
-// Public Routes
 router.get("/plans", PaymentController.getSubscriptionPlans);
 
-// Authenticated Routes
 router.post(
   "/create-checkout-session",
   auth(UserRole.USER, UserRole.ADMIN),

@@ -7,7 +7,6 @@ import { ReviewValidation } from "./review.validation";
 
 const router = express.Router();
 
-// Authenticated Routes
 router.post(
   "/",
   auth(UserRole.USER, UserRole.ADMIN),
@@ -15,7 +14,6 @@ router.post(
   ReviewController.createReview
 );
 
-// done
 router.get(
   "/my",
   auth(UserRole.USER, UserRole.ADMIN),
@@ -33,7 +31,6 @@ router.get(
   ReviewController.getToReviewPlans
 );
 
-// Public Routes //done
 router.get("/user/:userId", ReviewController.getReviewsForUser);
 
 router.patch(

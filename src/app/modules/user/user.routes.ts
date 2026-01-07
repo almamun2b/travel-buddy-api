@@ -8,31 +8,26 @@ import { userValidation } from "./user.validation";
 
 const router = express.Router();
 
-// Get all users (Admin only)
 router.get("/", auth(UserRole.ADMIN), userController.getAllUsers);
-// Get dashboard stats (authenticated users only)
+
 router.get(
   "/dashboard-stats",
   auth(UserRole.ADMIN, UserRole.USER),
   userController.getDashboardStats
 );
-// Get my profile
+
 router.get(
   "/profile/me",
   auth(UserRole.ADMIN, UserRole.USER),
   userController.getMyProfile
 );
 
-// Explore travelers (public)
 router.get("/explore/travelers", userController.exploreTravelers);
 
-// Get user public profile
 router.get("/profile/:id", userController.getPublicProfile);
 
-// Get single user by ID (Admin only)
 router.get("/:id", auth(UserRole.ADMIN), userController.getUserById);
 
-// Create admin user (Admin only)
 router.post(
   "/create-admin",
   auth(UserRole.ADMIN),
@@ -43,7 +38,6 @@ router.post(
   }
 );
 
-// Update my profile
 router.patch(
   "/profile/update",
   auth(UserRole.ADMIN, UserRole.USER),
@@ -56,10 +50,8 @@ router.patch(
   }
 );
 
-// Soft delete user (Admin only)
 router.delete("/soft/:id", auth(UserRole.ADMIN), userController.softDeleteUser);
 
-// Update user status (Admin only)
 router.patch(
   "/:id/status",
   auth(UserRole.ADMIN),
@@ -67,7 +59,6 @@ router.patch(
   userController.changeUserStatus
 );
 
-// Delete user (Admin only)
 router.delete("/:id", auth(UserRole.ADMIN), userController.deleteUser);
 
 export const userRoutes = router;

@@ -8,10 +8,8 @@ import { TravelPlanValidation } from "./travelPlans.validation";
 
 const router = express.Router();
 
-//  Public Routes
 router.get("/", TravelPlanController.getAllTravelPlans);
 
-//  Authenticated User Routes
 router.post(
   "/",
   auth(UserRole.USER, UserRole.ADMIN),

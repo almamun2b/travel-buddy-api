@@ -7,7 +7,6 @@ import { AuthValidation } from "./auth.validation";
 
 const router = express.Router();
 
-// Public routes
 router.post(
   "/register",
   validateRequest(AuthValidation.registerUser),
@@ -46,7 +45,6 @@ router.post(
   AuthController.resetPassword
 );
 
-// Protected routes
 router.post(
   "/change-password",
   auth(UserRole.ADMIN, UserRole.USER),
