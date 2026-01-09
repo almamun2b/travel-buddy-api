@@ -1,0 +1,95 @@
+model Destination {
+  id               String              @id @default(uuid())
+  name             String
+  description      String              @db.Text
+  location         String
+  country          String
+  coordinates      String?             // "lat,lng" format
+  images           String[]            // Array of image URLs
+  category         DestinationCategory
+  difficultyLevel  DifficultyLevel     @default(MODERATE)
+  duration         String?             // e.g., "3 days", "1 week"
+  bestTimeToVisit  String?             // e.g., "April to October"
+  weather          String?             // General weather info
+  language         String?             // Local language
+  currency         String?             // Local currency
+  timezone         String?             // Timezone
+  
+  // Travel related info
+  activities       String[]            // Available activities
+  amenities        String[]            // Available amenities
+  transportation   String[]            // Transportation options
+  accommodation    String[]            // Accommodation types
+  
+  // Pricing
+  averageCost      Float?              // Average daily cost per person
+  currencySymbol   String?             // Currency symbol for display
+  
+  // Ratings and popularity
+  averageRating    Float               @default(0)
+  totalReviews     Int                 @default(0)
+  totalTravellers  Int                 @default(0)
+  popularityScore  Float               @default(0)
+  
+  // Features
+  isRecommended    Boolean             @default(false)
+  isPopular        Boolean             @default(false)
+  isTrending       Boolean             @default(false)
+  isHiddenGem      Boolean             @default(false)
+  
+  // Status
+  status           DestinationStatus   @default(ACTIVE)
+  isDeleted        Boolean             @default(false)
+  
+  // SEO and metadata
+  slug             String?             @unique
+  metaTitle        String?
+  metaDescription  String?
+  tags             String[]
+  
+  // Timestamps
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  
+  // Relations
+  travelPlans      TravelPlan[]
+  
+  @@map("destinations")
+}
+
+enum DestinationCategory {
+  ADVENTURE
+  BEACH
+  MOUNTAIN
+  CITY
+  CULTURAL
+  NATURE
+  WILDLIFE
+  HISTORICAL
+  ROMANTIC
+  FAMILY_FRIENDLY
+  SOLO_TRAVEL
+  FOOD_WINE
+  WELLNESS
+  PHOTOGRAPHY
+  ROAD_TRIP
+  CRUISE
+  PILGRIMAGE
+  BUSINESS
+  ECO_TOURISM
+  EXTREME_SPORTS
+}
+
+enum DifficultyLevel {
+  EASY
+  MODERATE
+  CHALLENGING
+  EXTREME
+}
+
+enum DestinationStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  ARCHIVED
+}

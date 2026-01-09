@@ -79,6 +79,7 @@ const createTravelPlan = async (
   const result = await prisma.travelPlan.create({
     data: {
       ...payload,
+      destinationName: payload.destination,
       creatorId: user.id,
       startDate: new Date(payload.startDate),
       endDate: new Date(payload.endDate),
@@ -115,7 +116,7 @@ const getAllTravelPlans = async (params: any, options: IPaginationOptions) => {
 
   if (destination) {
     andConditions.push({
-      destination: { contains: destination, mode: "insensitive" },
+      destinationName: { contains: destination, mode: "insensitive" },
     });
   }
 
@@ -503,7 +504,7 @@ const adminGetAllTravelPlans = async (
 
   if (params.destination) {
     andConditions.push({
-      destination: { contains: params.destination, mode: "insensitive" },
+      destinationName: { contains: params.destination, mode: "insensitive" },
     });
   }
 

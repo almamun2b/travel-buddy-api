@@ -1,6 +1,7 @@
 import express from "express";
 import { apiLimiter } from "../middlewares/rateLimiter";
 import { AuthRoutes } from "../modules/auth/auth.routes";
+import { destinationRoutes } from "../modules/destination/destination.routes";
 import { PaymentRoutes } from "../modules/payment/payment.routes";
 import { reviewRoutes } from "../modules/review/review.routes";
 import { travelPlanRoutes } from "../modules/travelPlans/travelPlans.routes";
@@ -18,6 +19,10 @@ const moduleRoutes = [
   {
     path: "/auth",
     route: AuthRoutes,
+  },
+  {
+    path: "/destinations",
+    route: destinationRoutes,
   },
   {
     path: "/payment",

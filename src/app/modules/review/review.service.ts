@@ -287,7 +287,7 @@ const getToReviewPlans = async (user: IAuthUser) => {
         creatorId: plan.creator.id,
         title: plan.title,
         description: plan.description,
-        destination: plan.destination,
+        destinationName: plan.destinationName,
         startDate: plan.startDate,
         endDate: plan.endDate,
         budget: plan.budget,

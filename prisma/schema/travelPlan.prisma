@@ -3,7 +3,9 @@ model TravelPlan {
   creatorId   String
   title       String
   description String     @db.Text
-  destination String
+  destinationName String
+  destinationId String? // Relation to Destination model
+  
   startDate   DateTime
   endDate     DateTime
   budget      Float?
@@ -22,6 +24,7 @@ model TravelPlan {
 
   // Relations
   creator        User            @relation("CreatedTravelPlans", fields: [creatorId], references: [id])
+  destination    Destination?    @relation(fields: [destinationId], references: [id])
   travelRequests TravelRequest[]
   reviews        Review[]
 
