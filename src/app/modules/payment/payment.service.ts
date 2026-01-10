@@ -60,7 +60,7 @@ const createCheckoutSession = async (
   ) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "You already have an active paid subscription!"
+      "You already have an active paid subscription!, Downgrade to free plan to upgrade"
     );
   }
 
