@@ -1352,6 +1352,249 @@ Special thanks to:
 
 ---
 
+---
+
+## 🤖 AI Travel Assistant
+
+The platform includes a built-in AI chat assistant powered by **OpenRouter (Llama 3.1 8B)** that helps users with travel planning, destination recommendations, budget tips, and platform guidance.
+
+### Endpoint
+
+| Method | Endpoint | Access |
+|---|---|---|
+| `POST` | `/api/v1/ai/chat` | Authenticated (USER, ADMIN) |
+
+### Request Body
+
+```json
+{
+  "message": "What are the best budget destinations in Southeast Asia?",
+  "conversationHistory": []
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `message` | `string` | ✅ Yes | The user's message (max 2000 chars) |
+| `conversationHistory` | `array` | ❌ No | Previous chat turns for multi-turn conversation |
+
+### Response
+
+```json
+{
+  "success": true,
+  "message": "AI response generated successfully!",
+  "data": {
+    "reply": "Southeast Asia is packed with amazing budget-friendly destinations! Thailand..."
+  }
+}
+```
+
+---
+
+### 🖥️ Frontend Integration Guide
+
+#### Prerequisites
+
+The user must be **logged in** — the endpoint requires a valid JWT `accessToken`.
+
+---
+
+#### Option 1: Plain JavaScript / `fetch`
+
+```javascript
+// Simple one-shot message
+async function askTravelAI(message, accessToken) {
+  const response = await fetch("http://localhost:5000/api/v1/ai/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ message }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "AI request failed");
+  }
+
+  const data = await response.json();
+  return data.data.reply; // the AI's text response
+}
+
+// Usage
+const reply = await askTravelAI("Suggest a 7-day itinerary for Japan", token);
+console.log(reply);
+```
+
+---
+
+#### Option 2: Axios
+
+```javascript
+import axios from "axios";
+
+async function askTravelAI(message, accessToken, conversationHistory = []) {
+  const { data } = await axios.post(
+    "http://localhost:5000/api/v1/ai/chat",
+    { message, conversationHistory },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  return data.data.reply;
+}
+```
+
+---
+
+#### Option 3: React Hook (multi-turn chat)
+
+A ready-to-use React hook that maintains conversation history for a real chat experience:
+
+```jsx
+import { useState } from "react";
+
+function useTravelAI(accessToken) {
+  const [messages, setMessages]   = useState([]); // { role, content }[]
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState(null);
+
+  const sendMessage = async (userMessage) => {
+    // Optimistically add the user message
+    const updatedHistory = [
+      ...messages,
+      { role: "user", content: userMessage },
+    ];
+    setMessages(updatedHistory);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/v1/ai/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          // Send prior turns so the AI remembers the conversation
+          conversationHistory: messages,
+        }),
+      });
+
+      if (!response.ok) throw new Error("AI request failed");
+
+      const data = await response.json();
+      const aiReply = data.data.reply;
+
+      // Append the assistant reply to history
+      setMessages([...updatedHistory, { role: "assistant", content: aiReply }]);
+      return aiReply;
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearChat = () => setMessages([]);
+
+  return { messages, loading, error, sendMessage, clearChat };
+}
+```
+
+**Example component using the hook:**
+
+```jsx
+function TravelChatWidget({ accessToken }) {
+  const { messages, loading, error, sendMessage, clearChat } = useTravelAI(accessToken);
+  const [input, setInput] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    await sendMessage(input.trim());
+    setInput("");
+  };
+
+  return (
+    <div className="chat-widget">
+      <div className="chat-messages">
+        {messages.map((msg, i) => (
+          <div key={i} className={`message ${msg.role}`}>
+            <strong>{msg.role === "user" ? "You" : "🤖 TravelBuddy AI"}</strong>
+            <p>{msg.content}</p>
+          </div>
+        ))}
+        {loading && <p className="loading">AI is thinking...</p>}
+        {error && <p className="error">{error}</p>}
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask anything about travel..."
+          disabled={loading}
+        />
+        <button type="submit" disabled={loading || !input.trim()}>
+          Send
+        </button>
+        <button type="button" onClick={clearChat}>Clear</button>
+      </form>
+    </div>
+  );
+}
+```
+
+---
+
+#### Multi-Turn Conversation (how it works)
+
+The `conversationHistory` field lets the AI remember prior messages. Each turn is a `{ role, content }` object:
+
+```json
+{
+  "message": "What about budget tips for Thailand?",
+  "conversationHistory": [
+    { "role": "user",      "content": "What are the best destinations in SE Asia?" },
+    { "role": "assistant", "content": "Southeast Asia has many beautiful places..." }
+  ]
+}
+```
+
+Simply accumulate turns in state (as shown in the React hook above) and pass them with every request.
+
+---
+
+#### Environment Setup
+
+Add the OpenRouter API key in your `.env` file:
+
+```env
+# AI Configuration (OpenRouter)
+OPEN_ROUTER_API_KEY=sk-or-v1-your_openrouter_api_key_here
+```
+
+Get a free API key at [https://openrouter.ai](https://openrouter.ai). The free **Llama 3.1 8B** model used here requires no payment.
+
+> ⚠️ **Security**: Never call the AI endpoint directly from the frontend with your API key. All AI calls go through the backend — the key stays server-side only.
+
+---
+
+#### Error Responses
+
+| Status | Reason |
+|---|---|
+| `401 Unauthorized` | Missing or invalid JWT token |
+| `400 Bad Request` | `message` field missing or empty |
+| `500 Internal Server Error` | OpenRouter API call failed |
+
 <div align="center">
   <p>Made with ❤️ by <a href="https://github.com/almamun2b">Al Mamun</a></p>
   <p>If you find this project helpful, please consider giving it a ⭐️</p>
