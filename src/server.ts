@@ -13,17 +13,6 @@ async function bootstrap() {
       console.log(`🚀 Server is running on http://localhost:${env.port}`);
     });
 
-    const exitHandler = () => {
-      if (server) {
-        server.close(() => {
-          console.log("Server closed gracefully.");
-          process.exit(1);
-        });
-      } else {
-        process.exit(1);
-      }
-    };
-
     process.on("unhandledRejection", (error) => {
       console.log(
         "Unhandled Rejection is detected, we are closing our server..."
